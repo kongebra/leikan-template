@@ -7,21 +7,22 @@ const API_BASE = process.env.API_BASE_URL ?? "http://localhost:5000";
 // Oppdaterer poengregler for en turnering via PUT /api/v1/tournaments/:id/point-rules
 export async function updatePointRulesAction(
   tournamentId: string,
+  tournamentSlug: string,
   formData: FormData
 ) {
   const body = {
     tournamentId,
-    participantPoints: Number(formData.get("participantPoints")),
-    firstPlacePoints: Number(formData.get("firstPlacePoints")),
-    secondPlacePoints: Number(formData.get("secondPlacePoints")),
-    thirdPlacePoints: Number(formData.get("thirdPlacePoints")),
-    organizerWithParticipationPoints: Number(
-      formData.get("organizerWithParticipationPoints")
+    participation: Number(formData.get("participation")),
+    firstPlace: Number(formData.get("firstPlace")),
+    secondPlace: Number(formData.get("secondPlace")),
+    thirdPlace: Number(formData.get("thirdPlace")),
+    organizedWithParticipation: Number(
+      formData.get("organizedWithParticipation")
     ),
-    organizerWithoutParticipationPoints: Number(
-      formData.get("organizerWithoutParticipationPoints")
+    organizedWithoutParticipation: Number(
+      formData.get("organizedWithoutParticipation")
     ),
-    spectatorPoints: Number(formData.get("spectatorPoints")),
+    spectator: Number(formData.get("spectator")),
   };
 
   const res = await fetch(
@@ -34,12 +35,13 @@ export async function updatePointRulesAction(
   );
 
   if (!res.ok) throw new Error("Kunne ikke oppdatere poengregler");
-  revalidatePath(`/admin/tournaments/${tournamentId}`);
+  revalidatePath(`/admin/tournaments/${tournamentSlug}`);
 }
 
 // Oppretter et nytt spill i turneringen via POST /api/v1/games
 export async function createGameAction(
   tournamentId: string,
+  tournamentSlug: string,
   formData: FormData
 ) {
   const body = {
@@ -57,5 +59,5 @@ export async function createGameAction(
   });
 
   if (!res.ok) throw new Error("Kunne ikke opprette spill");
-  revalidatePath(`/admin/tournaments/${tournamentId}`);
+  revalidatePath(`/admin/tournaments/${tournamentSlug}`);
 }

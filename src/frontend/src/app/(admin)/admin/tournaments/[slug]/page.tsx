@@ -9,13 +9,13 @@ type TournamentDetailResponse = {
   name: string;
   slug: string;
   pointRules: {
-    participantPoints: number;
-    firstPlacePoints: number;
-    secondPlacePoints: number;
-    thirdPlacePoints: number;
-    organizerWithParticipationPoints: number;
-    organizerWithoutParticipationPoints: number;
-    spectatorPoints: number;
+    participation: number;
+    firstPlace: number;
+    secondPlace: number;
+    thirdPlace: number;
+    organizedWithParticipation: number;
+    organizedWithoutParticipation: number;
+    spectator: number;
   };
 };
 
@@ -31,12 +31,12 @@ type GameSummaryResponse = {
 // API-basis-URL — hentes fra miljøvariabel, kun tilgjengelig server-side
 const API_BASE = process.env.API_BASE_URL ?? "http://localhost:5000";
 
-// Henter turnering med detaljer fra backend — returnerer null ved feil
+// Henter turnering med detaljer fra backend på slug — returnerer null ved feil
 async function getTournament(
-  id: string
+  slug: string
 ): Promise<TournamentDetailResponse | null> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/tournaments/${id}`, {
+    const res = await fetch(`${API_BASE}/api/v1/tournaments/${slug}`, {
       cache: "no-store",
     });
     if (!res.ok) return null;
@@ -62,13 +62,13 @@ async function getGames(tournamentId: string): Promise<GameSummaryResponse[]> {
 
 // Next.js 16 async params — params er et Promise
 type Props = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Avventer async params før vi kan hente turneringsnavnet
-  const { id } = await params;
-  const tournament = await getTournament(id);
+  const { slug } = await params;
+  const tournament = await getTournament(slug);
   return {
     title: tournament?.name ?? "Turnering",
   };
@@ -77,23 +77,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // Admin-detaljside for en enkelt turnering — poengregler og spilliste
 export default async function AdminTournamentDetailPage({ params }: Props) {
   // Avventer async params — Next.js 16-krav
-  const { id } = await params;
+  const { slug } = await params;
 
-  // Henter turnering og spill parallelt for å unngå sekvensielle nettverksforespørsler
-  const [tournament, games] = await Promise.all([
-    getTournament(id),
-    getGames(id),
-  ]);
+  // Turneringen slås opp på slug; spillene trenger turneringens id og hentes etterpå
+  const tournament = await getTournament(slug);
 
   // Returnerer 404 dersom turneringen ikke finnes
   if (!tournament) {
     notFound();
   }
 
+  const games = await getGames(tournament.id);
+
   // Hjelpefunksjon — genererer bundet Server Action for poengregler
-  const updateRules = updatePointRulesAction.bind(null, tournament.id);
+  const updateRules = updatePointRulesAction.bind(null, tournament.id, tournament.slug);
   // Hjelpefunksjon — genererer bundet Server Action for opprett spill
-  const createGame = createGameAction.bind(null, tournament.id);
+  const createGame = createGameAction.bind(null, tournament.id, tournament.slug);
 
   // Sorterer spill: uferdige øverst, deretter alfabetisk
   const sortedGames = games
@@ -596,60 +595,60 @@ export default async function AdminTournamentDetailPage({ params }: Props) {
         <form action={updateRules}>
           <div className="point-rules-grid">
             <div className="form-field">
-              <label htmlFor="participantPoints" className="form-label">
+              <label htmlFor="participation" className="form-label">
                 Deltaker
               </label>
               <input
-                id="participantPoints"
-                name="participantPoints"
+                id="participation"
+                name="participation"
                 type="number"
                 min="0"
-                defaultValue={tournament.pointRules.participantPoints}
+                defaultValue={tournament.pointRules.participation}
                 required
                 className="form-input-number"
               />
             </div>
 
             <div className="form-field">
-              <label htmlFor="firstPlacePoints" className="form-label">
+              <label htmlFor="firstPlace" className="form-label">
                 1. plass (additivt)
               </label>
               <input
-                id="firstPlacePoints"
-                name="firstPlacePoints"
+                id="firstPlace"
+                name="firstPlace"
                 type="number"
                 min="0"
-                defaultValue={tournament.pointRules.firstPlacePoints}
+                defaultValue={tournament.pointRules.firstPlace}
                 required
                 className="form-input-number"
               />
             </div>
 
             <div className="form-field">
-              <label htmlFor="secondPlacePoints" className="form-label">
+              <label htmlFor="secondPlace" className="form-label">
                 2. plass (additivt)
               </label>
               <input
-                id="secondPlacePoints"
-                name="secondPlacePoints"
+                id="secondPlace"
+                name="secondPlace"
                 type="number"
                 min="0"
-                defaultValue={tournament.pointRules.secondPlacePoints}
+                defaultValue={tournament.pointRules.secondPlace}
                 required
                 className="form-input-number"
               />
             </div>
 
             <div className="form-field">
-              <label htmlFor="thirdPlacePoints" className="form-label">
+              <label htmlFor="thirdPlace" className="form-label">
                 3. plass (additivt)
               </label>
               <input
-                id="thirdPlacePoints"
-                name="thirdPlacePoints"
+                id="thirdPlace"
+                name="thirdPlace"
                 type="number"
                 min="0"
-                defaultValue={tournament.pointRules.thirdPlacePoints}
+                defaultValue={tournament.pointRules.thirdPlace}
                 required
                 className="form-input-number"
               />
@@ -657,18 +656,18 @@ export default async function AdminTournamentDetailPage({ params }: Props) {
 
             <div className="form-field">
               <label
-                htmlFor="organizerWithParticipationPoints"
+                htmlFor="organizedWithParticipation"
                 className="form-label"
               >
                 Arrangør m/ deltakelse
               </label>
               <input
-                id="organizerWithParticipationPoints"
-                name="organizerWithParticipationPoints"
+                id="organizedWithParticipation"
+                name="organizedWithParticipation"
                 type="number"
                 min="0"
                 defaultValue={
-                  tournament.pointRules.organizerWithParticipationPoints
+                  tournament.pointRules.organizedWithParticipation
                 }
                 required
                 className="form-input-number"
@@ -677,18 +676,18 @@ export default async function AdminTournamentDetailPage({ params }: Props) {
 
             <div className="form-field">
               <label
-                htmlFor="organizerWithoutParticipationPoints"
+                htmlFor="organizedWithoutParticipation"
                 className="form-label"
               >
                 Arrangør u/ deltakelse
               </label>
               <input
-                id="organizerWithoutParticipationPoints"
-                name="organizerWithoutParticipationPoints"
+                id="organizedWithoutParticipation"
+                name="organizedWithoutParticipation"
                 type="number"
                 min="0"
                 defaultValue={
-                  tournament.pointRules.organizerWithoutParticipationPoints
+                  tournament.pointRules.organizedWithoutParticipation
                 }
                 required
                 className="form-input-number"
@@ -696,15 +695,15 @@ export default async function AdminTournamentDetailPage({ params }: Props) {
             </div>
 
             <div className="form-field">
-              <label htmlFor="spectatorPoints" className="form-label">
+              <label htmlFor="spectator" className="form-label">
                 Tilskuer
               </label>
               <input
-                id="spectatorPoints"
-                name="spectatorPoints"
+                id="spectator"
+                name="spectator"
                 type="number"
                 min="0"
-                defaultValue={tournament.pointRules.spectatorPoints}
+                defaultValue={tournament.pointRules.spectator}
                 required
                 className="form-input-number"
               />
@@ -863,7 +862,7 @@ export default async function AdminTournamentDetailPage({ params }: Props) {
 
                 {/* Lenke til spillets detaljside */}
                 <Link
-                  href={`/admin/tournaments/${tournament.id}/games/${game.id}`}
+                  href={`/admin/tournaments/${tournament.slug}/games/${game.id}`}
                   className="btn-open-game"
                 >
                   {/* Pil-ikon */}

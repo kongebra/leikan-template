@@ -8,20 +8,20 @@ const API_BASE = process.env.API_BASE_URL ?? "http://localhost:5000";
 export async function addParticipantAction(
   gameId: string,
   personId: string,
-  tournamentId: string
+  tournamentSlug: string
 ) {
   await fetch(`${API_BASE}/api/v1/games/${gameId}/participants`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ personId }),
   });
-  revalidatePath(`/admin/tournaments/${tournamentId}/games/${gameId}`);
+  revalidatePath(`/admin/tournaments/${tournamentSlug}/games/${gameId}`);
 }
 
 // Fullfører et spill med plasseringer via POST /api/v1/games/:gameId/complete
 export async function completeGameAction(
   gameId: string,
-  tournamentId: string,
+  tournamentSlug: string,
   formData: FormData
 ) {
   const firstPlace = formData.getAll("firstPlace") as string[];
@@ -35,5 +35,5 @@ export async function completeGameAction(
   });
 
   if (!res.ok) throw new Error("Kunne ikke fullføre spill");
-  revalidatePath(`/admin/tournaments/${tournamentId}/games/${gameId}`);
+  revalidatePath(`/admin/tournaments/${tournamentSlug}/games/${gameId}`);
 }

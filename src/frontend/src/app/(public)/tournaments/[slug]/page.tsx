@@ -8,13 +8,13 @@ type TournamentDetailResponse = {
   name: string;
   slug: string;
   pointRules: {
-    participantPoints: number;
-    firstPlacePoints: number;
-    secondPlacePoints: number;
-    thirdPlacePoints: number;
-    organizerWithParticipationPoints: number;
-    organizerWithoutParticipationPoints: number;
-    spectatorPoints: number;
+    participation: number;
+    firstPlace: number;
+    secondPlace: number;
+    thirdPlace: number;
+    organizedWithParticipation: number;
+    organizedWithoutParticipation: number;
+    spectator: number;
   };
 };
 
@@ -406,43 +406,43 @@ export default async function TournamentDetailPage({
   const pointRuleItems = [
     {
       label: "Deltaker",
-      points: pointRules.participantPoints,
+      points: pointRules.participation,
       icon: "◈",
       highlight: false,
     },
     {
       label: "1. plass",
-      points: pointRules.firstPlacePoints,
+      points: pointRules.firstPlace,
       icon: "⬡",
       highlight: true,
     },
     {
       label: "2. plass",
-      points: pointRules.secondPlacePoints,
+      points: pointRules.secondPlace,
       icon: "⬡",
       highlight: false,
     },
     {
       label: "3. plass",
-      points: pointRules.thirdPlacePoints,
+      points: pointRules.thirdPlace,
       icon: "⬡",
       highlight: false,
     },
     {
       label: "Arrangør (med deltakelse)",
-      points: pointRules.organizerWithParticipationPoints,
+      points: pointRules.organizedWithParticipation,
       icon: "◇",
       highlight: false,
     },
     {
       label: "Arrangør (uten deltakelse)",
-      points: pointRules.organizerWithoutParticipationPoints,
+      points: pointRules.organizedWithoutParticipation,
       icon: "◇",
       highlight: false,
     },
     {
       label: "Tilskuer",
-      points: pointRules.spectatorPoints,
+      points: pointRules.spectator,
       icon: "○",
       highlight: false,
     },

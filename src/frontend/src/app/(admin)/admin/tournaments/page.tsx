@@ -467,7 +467,7 @@ export default async function AdminTournamentsPage() {
                     {/* Åpne-lenke til detaljside */}
                     <td>
                       <Link
-                        href={`/admin/tournaments/${tournament.id}`}
+                        href={`/admin/tournaments/${tournament.slug}`}
                         className="btn-open"
                       >
                         {/* Pil-ikon */}

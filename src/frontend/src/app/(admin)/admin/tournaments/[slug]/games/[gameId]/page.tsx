@@ -59,7 +59,7 @@ async function getPersons(): Promise<PersonSummaryResponse[]> {
 
 // Next.js 16 async params — params er et Promise
 type Props = {
-  params: Promise<{ id: string; gameId: string }>;
+  params: Promise<{ slug: string; gameId: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -74,7 +74,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // Admin-detaljside for ett spill — deltakere, arrangører, tilskuere og fullføring
 export default async function AdminGameDetailPage({ params }: Props) {
   // Avventer async params — Next.js 16-krav
-  const { id: tournamentId, gameId } = await params;
+  const { slug: tournamentSlug, gameId } = await params;
 
   // Henter spill og spillere parallelt for å unngå sekvensielle nettverksforespørsler
   const [game, persons] = await Promise.all([getGame(gameId), getPersons()]);
@@ -105,9 +105,8 @@ export default async function AdminGameDetailPage({ params }: Props) {
         a.firstName.localeCompare(b.firstName, "nb")
     );
 
-  // Bundne Server Actions — binder gameId og tournamentId inn i actionene
-  const addParticipant = addParticipantAction.bind(null);
-  const completeGame = completeGameAction.bind(null, gameId, tournamentId);
+  // Bundet Server Action — binder gameId og turneringens slug inn i actionen
+  const completeGame = completeGameAction.bind(null, gameId, tournamentSlug);
 
   return (
     <>
@@ -547,7 +546,7 @@ export default async function AdminGameDetailPage({ params }: Props) {
 
       {/* Tilbake-lenke til turnerings-detalj */}
       <Link
-        href={`/admin/tournaments/${tournamentId}`}
+        href={`/admin/tournaments/${tournamentSlug}`}
         className="back-link"
       >
         {/* Pil-venstre-ikon */}
@@ -605,13 +604,13 @@ export default async function AdminGameDetailPage({ params }: Props) {
               Alle registrerte spillere er allerede lagt til som deltakere.
             </p>
           ) : (
-            /* Skjema bruker inline Server Action — binder inn gameId og tournamentId */
+            /* Skjema bruker inline Server Action — binder inn gameId og turneringens slug */
             <form
               action={async (formData: FormData) => {
                 "use server";
                 const personId = formData.get("personId") as string;
                 if (personId) {
-                  await addParticipantAction(gameId, personId, tournamentId);
+                  await addParticipantAction(gameId, personId, tournamentSlug);
                 }
               }}
               className="add-participant-form"

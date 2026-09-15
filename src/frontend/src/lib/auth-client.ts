@@ -1,7 +1,8 @@
 import { createAuthClient } from "better-auth/client";
+import { genericOAuthClient } from "better-auth/client/plugins";
 
 // Klientside-instans for better-auth.
-// NEXT_PUBLIC_BETTER_AUTH_URL settes av Aspire ved kjøretid.
+// Ingen baseURL: kallene går mot samme origin som siden, uavhengig av hvilken port Aspire eksponerer.
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL ?? "http://localhost:3000",
+  plugins: [genericOAuthClient()],
 });
