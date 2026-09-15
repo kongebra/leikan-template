@@ -177,7 +177,7 @@ Du bygger ikke transport, du designer verktøyene.
 
 1. **CLI mot MCP, målt.**
    Skriv først ned hvilken du tror er billigst.
-   Hent scoreboard for en turnering via `curl` mot `/api/tournaments/{id}/scoreboard` og via Aspire MCP.
+   Hent scoreboard for en turnering via `curl` mot `/api/v1/tournaments/{id}/scoreboard` og via Aspire MCP.
    Opprett en issue via `gh issue create` og via GitHub MCP.
    Noter tokens og tid, og post tallene i Slack-tråden.
 2. **Beskrivelser agenten ikke blander.**
