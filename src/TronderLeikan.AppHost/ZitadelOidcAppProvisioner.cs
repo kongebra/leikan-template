@@ -50,7 +50,9 @@ internal sealed class ZitadelOidcAppProvisioner(string zitadelBaseUrl, string bo
         return client;
     }
 
-    // Venter til Zitadel svarer på ready-endepunktet og har skrevet admin-PAT ved første oppstart
+    // Venter til Zitadel svarer på ready-endepunktet, og deretter kort på at admin-PAT er skrevet.
+    // PAT skrives bare ved første initialisering av instansen, så mangler den etter at Zitadel er klar
+    // er databasen initialisert fra før uten bootstrap-mappen, og vi feiler raskt med tydelig beskjed.
     private async Task WaitUntilReadyAsync(HttpClient http, CancellationToken ct)
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -61,8 +63,8 @@ internal sealed class ZitadelOidcAppProvisioner(string zitadelBaseUrl, string bo
             try
             {
                 using var response = await http.GetAsync("/debug/ready", timeout.Token);
-                if (response.IsSuccessStatusCode && File.Exists(AdminPatPath))
-                    return;
+                if (response.IsSuccessStatusCode)
+                    break;
             }
             catch (HttpRequestException)
             {
@@ -71,12 +73,20 @@ internal sealed class ZitadelOidcAppProvisioner(string zitadelBaseUrl, string bo
             catch (OperationCanceledException) when (timeout.IsCancellationRequested && !ct.IsCancellationRequested)
             {
                 throw new TimeoutException(
-                    $"Zitadel svarte ikke på {zitadelBaseUrl}/debug/ready innen {ReadyTimeout.TotalMinutes} minutter, " +
-                    $"eller admin-PAT mangler i {AdminPatPath}. Slett postgres-volumet og start på nytt hvis Zitadel er initialisert uten PAT.");
+                    $"Zitadel svarte ikke på {zitadelBaseUrl}/debug/ready innen {ReadyTimeout.TotalMinutes} minutter.");
             }
 
             await Task.Delay(TimeSpan.FromSeconds(2), timeout.Token);
         }
+
+        for (var attempt = 0; attempt < 15 && !File.Exists(AdminPatPath); attempt++)
+            await Task.Delay(TimeSpan.FromSeconds(2), ct);
+
+        if (!File.Exists(AdminPatPath))
+            throw new InvalidOperationException(
+                $"Zitadel er klar, men admin-PAT finnes ikke i {AdminPatPath}. " +
+                "Den skrives bare ved første initialisering. Stopp AppHost, slett Docker-volumet " +
+                "«leikan-postgres-data» og mappen zitadel-bootstrap/, og start på nytt.");
     }
 
     private static async Task<string?> FindProjectIdAsync(HttpClient http, CancellationToken ct)
