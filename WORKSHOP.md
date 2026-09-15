@@ -143,8 +143,8 @@ Dekker 5.4, 5.6 (delvis), og 1.7 (frisk sesjon med oppsummering).
    Be den liste filene den faktisk leste.
    Forklar avviket for partneren.
 2. **Finn uoverensstemmelsen.**
-   Fasilitatorene har lagt inn én forskjell mellom [docs/TRONDER_LEIKAN.md](docs/TRONDER_LEIKAN.md) og koden i poengberegningen.
-   Still spørsmål til agenten til du finner den.
+   Partneren din endrer én regel i din kopi av [docs/TRONDER_LEIKAN.md](docs/TRONDER_LEIKAN.md) uten å si hvilken, for eksempel hvordan lik poengsum rangeres.
+   Still spørsmål til agenten om poengberegningen til du finner stedet der dokument og kode er uenige.
    Hvilken kilde stolte agenten på, og sa den det selv?
 3. **Hva leste du selv.**
    Ta story 2 i én lang sesjon uten å rydde.
@@ -170,8 +170,9 @@ Dekker 2.1, 2.2, 2.3, 2.4 (delvis), 2.5, og 5.3 (feilpropagering).
 
 **Læringsmål:** du kan velge mellom CLI, MCP og innebygde verktøy på grunnlag av målt kostnad, og du kan skrive en verktøybeskrivelse og en feilrespons som en agent faktisk handler riktig på.
 
-Repoet har et ferdig MCP-skjelett i `tools/leikan-mcp/` med verktøyet `hent_scoreboard` implementert og `hent_spill` som stub.
-Du bygger ikke transport, du designer verktøyene.
+Du lager en liten MCP-server mot turnerings-API-et med to lesende verktøy: hent scoreboard og hent spill.
+La agenten skrive transport og boilerplate.
+Du bruker tiden på beskrivelsene og feilresponsene, det er det som testes.
 
 **Kjerne**
 
@@ -181,8 +182,7 @@ Du bygger ikke transport, du designer verktøyene.
    Opprett en issue via `gh issue create` og via GitHub MCP.
    Noter tokens og tid, og post tallene i Slack-tråden.
 2. **Beskrivelser agenten ikke blander.**
-   Fyll ut `hent_spill` i skjelettet.
-   Skriv beskrivelsene for de to verktøyene.
+   Skriv beskrivelsene for de to verktøyene selv.
    Gjett først hvilken formulering som kommer til å forvirre.
    Test: gi agenten tre oppgaver som krever riktig valg, og se om den treffer.
 3. **Strukturerte feil.**
@@ -199,7 +199,7 @@ Du bygger ikke transport, du designer verktøyene.
 
 **Ikke Claude Code?** Skjelettet er en vanlig MCP-server og kan kobles til Copilot og Pi. Subagent-definisjoner i Copilot er `.github/agents/*.agent.md` med `tools:`.
 
-**Ta med hjem:** `tools/leikan-mcp/`, `.mcp.json`-oppføringen, tallene for CLI mot MCP.
+**Ta med hjem:** MCP-serveren, `.mcp.json`-oppføringen, tallene for CLI mot MCP.
 
 ### Start langkjøringen
 
@@ -207,7 +207,7 @@ Dette er oppgave 3 i modul 5, men den startes nå så den får gå over natten.
 
 Velg story 10 eller 16.
 Velg 1 eller 5 hvis du vil ha mer.
-Fyll ut oppdragsmalen i `docs/oppdragsmal.md`: mål, akseptkriterier, stoppregel, budsjett i turns eller tid, hvordan agenten verifiserer seg selv, og hva rapporten skal inneholde.
+Skriv oppdraget som en fil i repoet med disse overskriftene: mål, akseptkriterier, utenfor scope, stoppregel, budsjett i turns eller tid, selvverifisering, permission-nivå, rapport.
 Skriv så ned hvilket permission-nivå kjøringen skal ha og hvorfor.
 Har du git-forbud på jobb, kjør varianten der agenten leverer en patch-fil i stedet for en branch.
 Gi oppdraget til partneren først: «hva ville du misforstått?»
@@ -242,12 +242,13 @@ Dekker 4.1, 4.2, 4.3 (CLI-variant), 4.4 (delvis), 4.6, 3.4, 3.6.
    Bevis mot kjørende AppHost, med API-kall eller Playwright.
    Åpne PR med plan og bevis i beskrivelsen.
 2. **Review-agent med schema.**
-   Skriv `.claude/agents/review.md` fra malen i repoet: frisk kontekst, oppdrag om å finne feil, risikoskala.
-   Output skal validere mot `docs/review-schema.json`: fil, linje, alvorlighet, kategori, begrunnelse, forslag.
+   Skriv `.claude/agents/review.md`: frisk kontekst, begrenset verktøytilgang, oppdrag om å finne feil, og en sjekkliste med risikoskala.
+   Skriv et JSON-schema for funnene med feltene fil, linje, alvorlighet, kategori, begrunnelse og forslag, og krev at output validerer mot det.
    Kjør den mot din egen PR.
    Be så hovedagenten reviewe egen kode og sammenlign. Hva fant bare den friske?
 3. **Mål den mot fasit.**
-   Kjør `scripts/lag-fallback-prs.sh`. Den åpner tre PR-er i repoet ditt med plantede feil: en migrasjon som dropper en kolonne, en secret i diffen, en endret auth-policy.
+   Bytt repo med partneren.
+   Hver av dere har på forhånd åpnet tre små PR-er med én plantet feil i hver: en migrasjon som dropper en kolonne, en secret i diffen, en svekket tilgangssjekk.
    Review de tre manuelt først, ti minutter, uten agent.
    Kjør så review-agenten.
    Tell treff og falske positiver for deg og for agenten.
@@ -262,7 +263,7 @@ Dekker 4.1, 4.2, 4.3 (CLI-variant), 4.4 (delvis), 4.6, 3.4, 3.6.
 
 **Ikke Claude Code?** Oppgave 1 og 3 er verktøyuavhengige. Kravet i oppgave 2 er at output validerer mot schemaet, ikke hvilket flagg som lagde den. I Claude Code: `claude -p --output-format json --json-schema`. I Pi og Copilot: en agent-fil som ber om JSON, og validering med `ajv` eller `jq -e` etterpå.
 
-**Ta med hjem:** `.claude/agents/review.md`, `docs/review-schema.json`, tallene for treff og falske positiver.
+**Ta med hjem:** `.claude/agents/review.md`, schemaet, tallene for treff og falske positiver.
 
 ### Modul 5: Orkestrering
 
@@ -285,7 +286,6 @@ Dekker 1.2, 1.3, 1.4, 1.5, 1.6, 1.7.
    Mens de jobber: skriv review-kriteriene for begge PR-er før du ser koden.
    Merge begge fra hovedklonen og bevis E2E der.
 3. **Hooks som håndhever.**
-   Start med malen i `docs/hooks-mal.json`.
    PreToolUse på Bash som nekter `dotnet run --project src/TronderLeikan.AppHost` utenfor hovedklonen, med begrunnelse i svaret.
    Stop-hook som nekter agenten å si seg ferdig før `dotnet test` er grønn, og som sjekker `stop_hook_active` så den ikke løper evig.
    Test at hver faktisk stopper noe.
@@ -301,7 +301,7 @@ Dekker 1.2, 1.3, 1.4, 1.5, 1.6, 1.7.
 
 **Ikke Claude Code?** Worktrees og oppgave 1 er verktøyuavhengige. Orkestrator med subagent finnes i Pi. Copilot har hooks under et annet navn og uten Stop-hook. Fork av sesjon krever Claude Code.
 
-**Ta med hjem:** hooks i `.claude/settings.json`, `docs/oppdragsmal.md` utfylt, eventuelt `.github/workflows/review.yml`.
+**Ta med hjem:** hooks i `.claude/settings.json`, oppdragsfila, eventuelt `.github/workflows/review.yml`.
 
 **Plenum dag 2:** én ting du tar med til kundeprosjektet mandag, én setning hver. Fasilitator viser CCAR-F-mappingen på ett ark.
 
