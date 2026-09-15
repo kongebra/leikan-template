@@ -8,15 +8,14 @@ Oppgavene ligger i [docs/backlog.md](docs/backlog.md).
 Domenet er beskrevet i [docs/TRONDER_LEIKAN.md](docs/TRONDER_LEIKAN.md).
 Teknisk oppsett står i [README.md](README.md).
 
-> Klokkeslett og modulliste er et utgangspunkt og låses etter planleggingsmøtet 17. september.
-
 ## Før du reiser
 
 Gjør dette hjemme, senest torsdag 24. september, og bekreft i Slack-tråden.
 
 1. Lag ditt eget repo fra templaten: åpne `github.com/kongebra/leikan-template` og klikk «Use this template». Navn og synlighet velger du selv.
 2. Klon repoet ditt.
-3. Kjør `./bootstrap.sh` (macOS/Linux) eller `pwsh -ExecutionPolicy Bypass -File .\bootstrap.ps1` (Windows, PowerShell 7). Alt skal være grønt. Scriptet krever blant annet .NET 10, Docker, Node.js 22+ og innlogget GitHub CLI.
+3. Kjør `./bootstrap.sh` (macOS/Linux) eller `pwsh -ExecutionPolicy Bypass -File .\bootstrap.ps1` (Windows, PowerShell 7). Alt påkrevd skal være grønt. Scriptet krever .NET 10, Docker, Node.js 22+ og Git. GitHub CLI er anbefalt, se under.
+   GitHub-operasjoner i workshopen (issues, PR-er, kommentarer) kan gjøres med `gh` CLI, GitHub MCP eller nettleseren. Velg det du vil, men ha minst én av dem klar og innlogget.
 4. Kjør `dotnet run --project src/TronderLeikan.AppHost`. Første gang tar 2-5 minutter fordi containere lastes ned og Zitadel initialiseres. Målt 15. september på en Mac med containerne allerede lastet ned: under ett minutt fra kommando til grønt dashboard, rundt tre minutter uten cache.
 5. Åpne Aspire-dashboardet fra lenken i terminalen. Alle ressurser skal bli grønne.
 6. Klikk på lenken til `frontend` i dashboardet. Porten velges av Aspire, så den kan variere. Du skal se to turneringer med scoreboard.
@@ -41,16 +40,9 @@ Tolk, still spørsmål til deg selv, gi agenten kontekst.
 
 ## Dag 1: single-agent mastery
 
-| Tid | Hva |
-|---|---|
-| 08:30 | M1 Harness og oppsett |
-| 09:30 | M2 Memory og skills |
-| 11:30 | Lunsj |
-| 12:15 | M3 Plan, build, verifiser |
-| 14:45 | Oppsummering i plenum |
-| 15:00 | Slutt |
+Fasilitatorene styrer klokka og roper opp til samlinger. Du trenger bare å vite rekkefølgen: M1, M2, lunsj, M3, oppsummering i plenum.
 
-### M1: Harness og oppsett (60 min)
+### M1: Harness og oppsett
 
 **Mål:** Alle har grønt dashboard, kjenner harnessen sin og har kaptein-rammen i hodet.
 
@@ -69,7 +61,7 @@ Konseptene er verktøy-agnostiske, det er derfor Copilot og Codex er lov.
 
 **Gå dypere:** Kjør samme spørsmål i en annen harness og sammenlign hvilke filer den leste.
 
-### M2: Memory og skills (120 min)
+### M2: Memory og skills
 
 **Mål:** Repoet ditt har en `CLAUDE.md`/`AGENTS.md` du stoler på, og minst én egen skill.
 
@@ -91,7 +83,7 @@ Skill-skepsis: en skill som ikke brukes er støy.
 
 **Gå dypere:** Legg til en hook som kjører `dotnet build` etter hver filendring i `src/`, og vurder om det var verdt det.
 
-### M3: Plan, build, verifiser (150 min)
+### M3: Plan, build, verifiser
 
 **Mål:** Én user story levert som PR med plan i forkant og E2E-bevis i etterkant.
 
@@ -104,11 +96,11 @@ Målt i tokens og tid er `gh` CLI ofte billigere enn GitHub MCP for samme jobb.
 **Hands-on:**
 
 1. Velg en kort story fra [docs/backlog.md](docs/backlog.md), for eksempel 6, 11 eller 13.
-2. Lag en GitHub Issue med `gh issue create` i ditt eget repo. Skriv den slik produkteieren ville.
+2. Lag en GitHub Issue i ditt eget repo, med `gh issue create`, GitHub MCP eller nettleseren. Skriv den slik produkteieren ville.
 3. Start agenten i plan mode. Godkjenn ikke planen før den svarer på: hva endres, hvordan bevises det, hva kan gå galt.
 4. La agenten bygge. Krev at den beviser endringen mot kjørende AppHost, for eksempel via API-kall eller Playwright.
-5. Åpne PR med `gh pr create`. CI skal bli grønn.
-6. Underveis: gjør én GitHub-operasjon via MCP og én via `gh`, og noter tokens og tid.
+5. Åpne PR. CI skal bli grønn.
+6. Underveis: gjør én GitHub-operasjon via MCP og én via `gh` CLI hvis du har begge, og noter tokens og tid.
 
 **Verifiser slik:** PR-en har plan, bevis (output eller skjermbilde) og grønn CI. En kollega kan lese PR-en og forstå hva som ble gjort uten å se koden.
 
@@ -116,17 +108,9 @@ Målt i tokens og tid er `gh` CLI ofte billigere enn GitHub MCP for samme jobb.
 
 ## Dag 2: multi-agent og autonomi
 
-| Tid | Hva |
-|---|---|
-| 08:30 | M4 Parallelle agenter og worktrees |
-| 10:00 | M5 Autonom validering og risikoreview |
-| 11:45 | Start langkjøring (M6) |
-| 12:00 | Lunsj |
-| 12:45 | M6 Orkestrering og capstone |
-| 14:15 | Plenumsdeling |
-| 15:00 | Slutt |
+Rekkefølge: M4, M5, start langkjøringen rett før lunsj, lunsj, M6, plenumsdeling.
 
-### M4: Parallelle agenter og worktrees (90 min)
+### M4: Parallelle agenter og worktrees
 
 **Mål:** To user stories levert samtidig av to agenter i samme repo uten at de tråkker på hverandre.
 
@@ -150,7 +134,7 @@ La agentene i worktrees bevise med `dotnet test`, `npm run lint` og bygg. E2E mo
 
 **Gå dypere:** Observer rate limits. Noter når du ble strupet og hva som utløste det.
 
-### M5: Autonom validering og risikoreview (120 min)
+### M5: Autonom validering og risikoreview
 
 **Mål:** En review-agent i frisk kontekst leser PR-ene fra M3 og M4 og finner noe du ikke fant.
 
@@ -170,7 +154,7 @@ Hooks kan trigge review automatisk på PR-opprettelse.
 
 **Gå dypere:** La review-agenten poste funnene som PR-kommentarer via `gh`.
 
-### M6: Langkjøring, orkestrering og capstone (120 min)
+### M6: Langkjøring, orkestrering og capstone
 
 **Mål:** En langkjøring med objektiv og token-cap har levert noe brukbart mens du var på lunsj. Fritt arbeid etterpå.
 
@@ -182,7 +166,7 @@ First-mate-mønsteret: én agent styrer mannskapet, du styrer den.
 1. Før lunsj: velg en stor story, for eksempel 1, 3, 5 eller 7. Gi agenten objektiv, token-cap og krav om selvverifisering. Start den.
 2. Etter lunsj: vurder resultatet. Hva gjorde den, hva stoppet den, hva ville du gjort annerledes i oppdraget?
 3. Capstone: fritt valg fra backloggen. Bruk alt fra begge dager.
-4. Plenumsdeling siste 45 minutter: én ting som overrasket, én ting du tar med hjem.
+4. Plenumsdeling: én ting som overrasket, én ting du tar med hjem.
 
 **Verifiser slik:** Langkjøringen etterlot en PR eller en tydelig rapport om hvorfor den stoppet. Capstone er demonstrert for minst én annen.
 

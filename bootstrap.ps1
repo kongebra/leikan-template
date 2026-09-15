@@ -51,12 +51,12 @@ else { Fail "Node.js 22 eller nyere med npm mangler" "https://nodejs.org/en/down
 if (Has git) { Ok "$(git --version)" }
 else { Fail "Git mangler" "https://git-scm.com/downloads" }
 
-# GitHub CLI brukes i workshopen til issues, PR-er og PR-kommentarer, og må være innlogget
+# GitHub CLI er anbefalt til issues og PR-er i workshopen. GitHub MCP eller nettleseren er alternativer
 if (Has gh) {
     if (Succeeds { gh auth status }) { Ok "GitHub CLI innlogget" }
-    else { Fail "GitHub CLI finnes men er ikke innlogget" "Kjør: gh auth login" }
+    else { Warn "GitHub CLI finnes men er ikke innlogget" "Kjør: gh auth login, eller bruk GitHub MCP/nettleseren" }
 }
-else { Fail "GitHub CLI mangler" "https://cli.github.com/" }
+else { Warn "GitHub CLI mangler (anbefalt, GitHub MCP eller nettleseren er alternativer)" "https://cli.github.com/" }
 
 # Aspire CLI er valgfritt: AppHost bygger med Aspire.AppHost.Sdk fra NuGet, men CLI gir «aspire run» og MCP-server
 if (Has aspire) { Ok "Aspire CLI $((aspire --version 2>$null | Select-Object -First 1) -split '\+' | Select-Object -First 1)" }

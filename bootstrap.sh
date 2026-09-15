@@ -56,15 +56,15 @@ else
   fail "Git mangler" "https://git-scm.com/downloads"
 fi
 
-# GitHub CLI brukes i workshopen til issues, PR-er og PR-kommentarer, og må være innlogget
+# GitHub CLI er anbefalt til issues og PR-er i workshopen. GitHub MCP eller nettleseren er alternativer
 if command -v gh >/dev/null 2>&1; then
   if gh auth status >/dev/null 2>&1; then
     ok "GitHub CLI innlogget"
   else
-    fail "GitHub CLI finnes men er ikke innlogget" "Kjør: gh auth login"
+    warn "GitHub CLI finnes men er ikke innlogget" "Kjør: gh auth login, eller bruk GitHub MCP/nettleseren"
   fi
 else
-  fail "GitHub CLI mangler" "https://cli.github.com/"
+  warn "GitHub CLI mangler (anbefalt, GitHub MCP eller nettleseren er alternativer)" "https://cli.github.com/"
 fi
 
 # Aspire CLI er valgfritt: AppHost bygger med Aspire.AppHost.Sdk fra NuGet, men CLI gir «aspire run» og MCP-server

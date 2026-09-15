@@ -52,7 +52,7 @@ Trønder Leikan lar administratorer:
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (PostgreSQL og Zitadel kjører i containere)
 - [Node.js 22 eller nyere](https://nodejs.org/en/download) med npm (frontend)
 - [Git](https://git-scm.com/downloads)
-- [GitHub CLI](https://cli.github.com/), innlogget med `gh auth login`
+- [GitHub CLI](https://cli.github.com/) er anbefalt til issues og PR-er, men GitHub MCP eller nettleseren fungerer også
 
 Aspire trenger ingen workload; AppHost bruker `Aspire.AppHost.Sdk` fra NuGet.
 [Aspire CLI](https://aspire.dev/get-started/install-cli/) er valgfritt.
