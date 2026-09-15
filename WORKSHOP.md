@@ -16,12 +16,13 @@ Gjør dette hjemme, senest torsdag 24. september, og bekreft i Slack-tråden.
 
 1. Lag ditt eget repo fra templaten: åpne `github.com/kongebra/leikan-template` og klikk «Use this template». Navn og synlighet velger du selv.
 2. Klon repoet ditt.
-3. Kjør `./bootstrap.sh` (macOS/Linux) eller `.\bootstrap.ps1` (Windows). Alt skal være grønt.
+3. Kjør `./bootstrap.sh` (macOS/Linux) eller `pwsh -ExecutionPolicy Bypass -File .\bootstrap.ps1` (Windows, PowerShell 7). Alt skal være grønt. Scriptet krever blant annet .NET 10, Docker, Node.js 22+ og innlogget GitHub CLI.
 4. Kjør `dotnet run --project src/TronderLeikan.AppHost`. Første gang tar 2-5 minutter fordi containere lastes ned og Zitadel initialiseres. Målt 15. september på en Mac med containerne allerede lastet ned: under ett minutt fra kommando til grønt dashboard, rundt tre minutter uten cache.
 5. Åpne Aspire-dashboardet fra lenken i terminalen. Alle ressurser skal bli grønne.
-6. Åpne <http://localhost:3000>. Du skal se to turneringer med scoreboard.
-7. Åpne <http://localhost:3000/admin>, logg inn med `zitadel-admin@zitadel.localhost` og `Password1!`. Du skal lande på admin-dashboardet.
+6. Klikk på lenken til `frontend` i dashboardet. Porten velges av Aspire, så den kan variere. Du skal se to turneringer med scoreboard.
+7. Legg til `/admin` på samme adresse, logg inn med `zitadel-admin@zitadel.localhost` og `Password1!`. Du skal lande på admin-dashboardet.
 8. Sørg for at agent-harnessen din er installert og innlogget. Claude Code er default, andre er tillatt på eget ansvar.
+9. Skal du bruke Playwright som bevis i M3, kjør `npx playwright install chromium` hjemme så nettleseren er lastet ned.
 
 Hvis noe stopper: sjekk «Feilsøking» i [README.md](README.md#feilsøking) først, og skriv så i Slack-tråden med feilmeldingen.
 Søndag 27. september har vi oppsamling på stedet for de som ikke fikk det til.
@@ -62,7 +63,7 @@ Konseptene er verktøy-agnostiske, det er derfor Copilot og Codex er lov.
 1. Kjør bootstrap og AppHost hvis du ikke gjorde det hjemme.
 2. Be agenten forklare hva som kjører: «Hva starter AppHost, og hvordan henger frontend, API og Zitadel sammen?»
 3. Be agenten finne ut hvordan poeng beregnes, og sammenlign med [docs/TRONDER_LEIKAN.md](docs/TRONDER_LEIKAN.md).
-4. Se `dsh`-demoen (DeepSeek Harness med tool-call-graf) i huddle eller opptak. Lenke kommer.
+4. Se `dsh`-demoen (DeepSeek Harness med tool-call-graf) i huddle eller opptak.
 
 **Verifiser slik:** Dashboard grønt, innlogget i admin, agenten svarte riktig på poengreglene uten at du pekte den til fila.
 
@@ -80,7 +81,7 @@ Skill-skepsis: en skill som ikke brukes er støy.
 
 **Hands-on:**
 
-1. `AGENTS.md` i repoet er med vilje tynn. Les den kritisk likevel: stemmer alt med koden? Be agenten sjekke hver påstand mot repoet, og rett det som er feil.
+1. Start med `AGENTS.md`. Be agenten verifisere hver påstand mot repoet før du stoler på den, og rett det som er feil. Det er en vane som gjelder alle memory-filer du arver.
 2. Gjør en liten endring med agenten, for eksempel et nytt felt på `Person` med migrasjon, API og admin-side. Ikke forklar noe på forhånd.
 3. Se hva den gjorde annerledes enn du ville: språk i kommentarer, pakkebehandler, hvor logikken landet, hvordan migrasjonen ble laget, om den beviste noe. Korriger, og be agenten lagre hver lærdom i `AGENTS.md` selv.
 4. Skill fram det som er betinget: en skill for «ny EF Core-migrasjon», en for «ny admin-side». Det som gjelder alltid blir i `AGENTS.md`, resten flyttes ut.
@@ -133,10 +134,15 @@ Målt i tokens og tid er `gh` CLI ofte billigere enn GitHub MCP for samme jobb.
 Tenk worktree-pool, ikke bokføring: opprett, bruk, merge, slett.
 Velg stories som ikke berører samme filer.
 
+**Én kjørende stack.** AppHost kan bare kjøre fra hovedklonen, ikke fra en worktree.
+Zitadel-porten er fast, Postgres-volumet er delt og `zitadel-bootstrap/` ligger bare i hovedklonen.
+Starter en agent AppHost i en worktree, feiler den med «admin-PAT finnes ikke», og følger du rådet om å slette volumet, ødelegger du miljøet for den andre agenten.
+La agentene i worktrees bevise med `dotnet test`, `npm run lint` og bygg. E2E mot kjørende stack gjør du fra hovedklonen etter merge.
+
 **Hands-on:**
 
 1. Velg to stories som er uavhengige, for eksempel 2 og 9, eller 13 og 14.
-2. Start én agent per story, hver i sin worktree.
+2. Start én agent per story, hver i sin worktree. Legg worktrees under `.worktrees/` (gitignored), ikke under `/tmp` på macOS.
 3. Observer: hvor mye må du følge med? Hva gjør du mens de jobber?
 4. Merge begge. Løs konflikter om det ble noen, og reflekter over hvorfor.
 

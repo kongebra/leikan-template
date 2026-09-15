@@ -38,10 +38,9 @@ Trønder Leikan lar administratorer:
 | Backend | .NET 10 (C#) |
 | Frontend | Next.js 16, React 19, Tailwind CSS 4, TypeScript |
 | Database | PostgreSQL |
-| Cache | Valkey (Redis-kompatibel) |
 | Identity | Zitadel v4 |
 | Orkestrering | .NET Aspire |
-| Pakkehåndtering (frontend) | Bun |
+| Pakkehåndtering (frontend) | npm (Node.js 22+) |
 
 ---
 
@@ -51,8 +50,9 @@ Trønder Leikan lar administratorer:
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (PostgreSQL og Zitadel kjører i containere)
-- [Bun](https://bun.sh/) (frontend)
+- [Node.js 22 eller nyere](https://nodejs.org/en/download) med npm (frontend)
 - [Git](https://git-scm.com/downloads)
+- [GitHub CLI](https://cli.github.com/), innlogget med `gh auth login`
 
 Aspire trenger ingen workload; AppHost bruker `Aspire.AppHost.Sdk` fra NuGet.
 [Aspire CLI](https://aspire.dev/get-started/install-cli/) er valgfritt.
@@ -60,11 +60,16 @@ Aspire trenger ingen workload; AppHost bruker `Aspire.AppHost.Sdk` fra NuGet.
 Sjekk at alt er på plass:
 
 ```bash
-./bootstrap.sh        # macOS / Linux
-.\bootstrap.ps1       # Windows
+./bootstrap.sh                                    # macOS / Linux
+pwsh -ExecutionPolicy Bypass -File .\bootstrap.ps1  # Windows (PowerShell 7)
 ```
 
-Scriptet installerer ingenting, men sier tydelig hva som mangler og hvor du finner det.
+Scriptet installerer ingenting utover `dotnet ef` fra `.config/dotnet-tools.json`, men sier tydelig hva som mangler og hvor du finner det.
+Windows-scriptet krever [PowerShell 7](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows).
+`-ExecutionPolicy Bypass` trengs fordi Windows som standard nekter å kjøre script lastet ned fra nettet.
+
+På Windows: klon til en kort sti, for eksempel `C:\src\`, og bruk gjerne Windows Terminal.
+Bruker du WSL, klon inne i WSL-filsystemet og ikke under `/mnt/c`.
 
 ### Kjør hele stacken
 
@@ -79,14 +84,14 @@ Aspire starter opp og orkestrerer:
 2. **Zitadel** — identitetsleverandør (api, login-UI og Traefik-proxy på port 8080)
 3. **DbMigrator** — kjører EF Core-migrasjoner og legger inn demodata hvis databasen er tom
 4. **API** — venter til migrasjoner er fullført
-5. **Frontend** — Next.js via Bun på <http://localhost:3000>
+5. **Frontend** — Next.js via npm. Aspire velger en ledig port, adressen står på `frontend` i dashboardet
 
 Første oppstart tar 2-5 minutter fordi containere lastes ned og Zitadel initialiseres.
 Aspire Dashboard åpnes automatisk og viser logger, helse og traces for alle tjenester.
 
 ### Innlogging
 
-Admin-panelet på <http://localhost:3000/admin> krever innlogging via Zitadel.
+Admin-panelet på `<frontend-adresse>/admin` krever innlogging via Zitadel.
 Zitadel oppretter en admin-bruker ved første oppstart:
 
 | | |
@@ -109,6 +114,18 @@ dotnet user-secrets --project src/TronderLeikan.AppHost \
   set "Parameters:postgres-password" "<passord>"
 ```
 
+### Porter
+
+Frontend og API får ledige porter av Aspire, så de kolliderer ikke med noe annet som kjører på maskinen.
+Zitadel må ha en fast port fordi login-URL-ene lagres i databasen ved første oppstart. Standard er 8080.
+Er 8080 opptatt, sett en annen port før første oppstart:
+
+```bash
+dotnet user-secrets --project src/TronderLeikan.AppHost set "Zitadel:Port" 8081
+```
+
+Bytter du port etter at Zitadel er initialisert, kjør reset-scriptet under først.
+
 ### Nullstill lokalt miljø
 
 Vil du starte helt på nytt: stopp AppHost og kjør reset-scriptet.
@@ -127,19 +144,29 @@ Det fjerner postgres-containeren, Aspire-nettverket, datavolumet `leikan-postgre
 | `postgres` stopper med melding om `pg_upgrade` eller «database files are incompatible» | Volumet har data fra en eldre Postgres-versjon enn Aspire nå bruker | Samme som over |
 | AppHost feiler med `Zitadel er klar, men admin-PAT finnes ikke` | Zitadel-databasen er initialisert fra før, men `zitadel-bootstrap/` er slettet | Samme som over |
 | Innlogging gir 400 fra Zitadel med `redirect_uri` | Frontend kjører på en annen adresse enn da OIDC-appen ble laget | Start AppHost på nytt, provisioneren oppdaterer redirect-URI |
-| AppHost feiler med at port 3000 eller 8080 er i bruk | En annen app, ofte en annen Aspire-AppHost, bruker porten | Stopp den andre appen. Portene er faste fordi Zitadel og redirect-URI er bundet til dem |
+| AppHost feiler med at port 8080 er i bruk | En annen app bruker porten Zitadel trenger | Sett `Zitadel:Port` som beskrevet under «Porter», kjør `reset-local`, start igjen |
+| Innlogging havner på feil port eller gir 404 fra Zitadel | `Zitadel:Port` er endret etter at databasen ble initialisert | Kjør `reset-local` og start igjen |
 | Forsiden viser «Ingen turneringer ennå» | Frontend får ikke svar fra API-et | Sjekk at `api` er grønn i dashboardet, se konsolloggen til `frontend` |
 | `migrator` eller `api` stopper med `Could not load file or assembly` | Repoet ligger under `/tmp` på macOS, som er en symlink | Klon til en vanlig mappe |
-| Frontend starter ikke, `frontend-bun-install` feiler | Bun mangler eller nettverket blokkerer registry | Kjør `bun install` manuelt i `src/frontend` og se feilen |
+| Frontend starter ikke, `frontend-npm-install` feiler | Node.js/npm mangler eller nettverket blokkerer registry | Kjør `npm install` manuelt i `src/frontend` og se feilen |
 | Sesjonen forsvinner etter noen minutter | better-auth kjører uten database og lagrer sesjonen i cookie | Forventet. Cookien fornyes ved aktivitet og varer 7 dager |
 
 ### Kjør kun frontend (manuelt)
 
 ```bash
 cd src/frontend
-bun install
-bun run dev
+npm install
+npm run dev
 ```
+
+### Bytte pakkebehandler i frontend
+
+Templaten bruker npm fordi det følger med Node.js og fungerer likt for alle.
+Vil du heller bruke pnpm, yarn eller Bun, gjør tre ting:
+
+1. Slett `src/frontend/package-lock.json` og kjør `pnpm install`, `yarn install` eller `bun install` for å få riktig lockfil.
+2. I `src/TronderLeikan.AppHost/AppHost.cs`, legg til `.WithPnpm()`, `.WithYarn()` eller `.WithBun()` etter `AddJavaScriptApp(...)`.
+3. I `.github/workflows/ci.yml`, bytt `setup-node` og `npm`-stegene i `frontend`-jobben til tilsvarende for verktøyet ditt.
 
 ### Kjør kun API (uten Aspire)
 
@@ -166,7 +193,7 @@ src/
 
 docs/
 ├── TRONDER_LEIKAN.md               # Fullstendig domenedokumentasjon
-└── plans/                          # Design- og implementasjonsplaner per lag
+└── backlog.md                      # User stories til workshopen
 ```
 
 ---
@@ -186,16 +213,9 @@ Infrastructure implementerer interfaces fra Application
 
 **Application** — use cases som handlers. Returnerer `Result<T>` med en sterk `Error`-type (kode + `ErrorType`-enum). Ingen domenelogikk her, kun koordinering.
 
-**Infrastructure** — EF Core + PostgreSQL via Npgsql. Konfigurasjoner i `Persistence/Configurations/`. Domain events skrives til `EventStore`, utgående meldinger til `OutboxMessages` — begge i samme transaksjon som forretningsdata.
+**Infrastructure** — EF Core + PostgreSQL via Npgsql. Konfigurasjoner i `Persistence/Configurations/`. Domain events skrives til `EventStore` og `OutboxMessages` i samme transaksjon som forretningsdata. Ingenting leser outboxen ennå; det finnes ingen prosessor eller meldingskø.
 
-**API** — Controllers arver `ApiControllerBase` som tilbyr `Problem(Error)` med RFC 9457 Problem Details. Versjonert via URL-segment (`/api/v1/`).
-
-### Multi-replica
-
-API kjøres med minst 2 replicas. Alt state lagres eksternt:
-- Ingen in-memory session-state
-- Domain events via **Outbox pattern** (aldri direkte dispatch)
-- Event-handlere er **idempotente**
+**API** — Controllers arver `ApiControllerBase` som tilbyr `Problem(Error)` med RFC 9457 Problem Details. Versjonert via URL-segment (`/api/v1/`). Ingen autentisering i dag.
 
 ---
 
@@ -219,6 +239,7 @@ GET    /api/v1/tournaments/{slug}
 POST   /api/v1/tournaments
 PUT    /api/v1/tournaments/{id}/point-rules
 GET    /api/v1/tournaments/{id}/scoreboard
+GET    /api/v1/tournaments/{id}/games
 
 GET    /api/v1/games/{id}
 POST   /api/v1/games
@@ -233,7 +254,7 @@ POST   /api/v1/games/{id}/simracing-results
 POST   /api/v1/games/{id}/simracing-results/complete
 ```
 
-Swagger/OpenAPI er tilgjengelig på `/openapi/v1.json` og `/swagger` i development.
+OpenAPI-dokumentet er tilgjengelig på `/openapi/v1.json` i development. Det finnes ingen Swagger UI.
 
 ---
 
@@ -298,3 +319,12 @@ dotnet test --filter "FullyQualifiedName~PersonsApiTests"
 ### Akseptansetester (API)
 
 Testprosjektet `TronderLeikan.Api.Tests` bruker `WebApplicationFactory` + `Testcontainers.PostgreSql` — ekte PostgreSQL-container, black-box mot HTTP-kontrakten. Ingen referanser til Application- eller Domain-typer i testene.
+Assertions skrives med [AwesomeAssertions](https://awesomeassertions.org/) (Apache 2.0).
+
+### Migrasjoner
+
+`dotnet ef` ligger i `.config/dotnet-tools.json` og gjenopprettes av bootstrap-scriptet (eller `dotnet tool restore`).
+
+```bash
+dotnet ef migrations add <Navn> --project src/TronderLeikan.Infrastructure
+```
