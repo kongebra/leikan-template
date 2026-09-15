@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "generate:api": "orval"
+    "lint": "eslint --max-warnings 0"
   },
   "dependencies": {
     "better-auth": "^1.7.5",
@@ -23,20 +22,18 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.3.5",
-    "orval": "^8.33.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3"
   },
-  "ignoreScripts": [
-    "sharp",
-    "unrs-resolver"
-  ],
-  "trustedDependencies": [
-    "sharp",
-    "unrs-resolver"
-  ],
   "overrides": {
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "allowScripts": {
+    "unrs-resolver@1.12.2": true,
+    "sharp@0.35.4": true
   }
 }

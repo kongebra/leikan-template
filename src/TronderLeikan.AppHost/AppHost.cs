@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Configuration;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Hemmeligheter genereres første gang og lagres i user secrets, så «dotnet run» virker uten manuelle steg.
@@ -27,9 +29,11 @@ var tronderleikanDb = postgres.AddDatabase("tronderleikan");
 // Zitadel bruker en separat database på samme Postgres-instans
 var zitadelDb = postgres.AddDatabase("zitadel");
 
-// Zitadel v4-stack: api + login UI + Traefik proxy
-// Traefik eksponeres på port 8080 som eneste inngangspunkt
-var zitadel = builder.AddZitadel("zitadel", zitadelDb, postgresPassword, zitadelMasterKey);
+// Zitadel v4-stack: api + login UI + Traefik proxy. Traefik er eneste inngangspunkt.
+// Porten må være stabil mellom kjøringer fordi Zitadel lagrer login-URL-ene i databasen ved første init.
+// Er 8080 opptatt: dotnet user-secrets set "Zitadel:Port" 8081 --project src/TronderLeikan.AppHost, og nullstill med reset-local.
+var zitadelPort = builder.Configuration.GetValue("Zitadel:Port", 8080);
+var zitadel = builder.AddZitadel("zitadel", zitadelDb, postgresPassword, zitadelMasterKey, zitadelPort);
 
 // DbMigrator kjøres automatisk ved oppstart, etter at PostgreSQL er klar.
 // Kjører migrasjoner og legger inn demodata hvis databasen er tom. API venter til den er ferdig.
@@ -45,17 +49,17 @@ var api = builder.AddProject<Projects.TronderLeikan_API>("api")
     .WaitFor(zitadel)
     .WithHttpHealthCheck("/health");
 
-// Frontend — Next.js via Bun. Kjører «bun run dev» etter «bun install», så en fersk klon starter uten manuelle steg.
+// Frontend — Next.js via npm. Aspire kjører «npm install» og deretter «npm run dev», så en fersk klon starter uten manuelle steg.
 // better-auth trenger ZITADEL_ISSUER, CLIENT_ID, CLIENT_SECRET og BETTER_AUTH_SECRET
-var frontend = builder.AddBunApp("frontend", "../frontend", entryPoint: "dev")
-    .WithBunPackageInstallation()
+var frontend = builder.AddJavaScriptApp("frontend", "../frontend")
     .WithReference(api)
     .WithReference(zitadel.GetEndpoint("http"))
     .WithEnvironment("API_BASE_URL", api.GetEndpoint("http"))
     .WithEnvironment("ZITADEL_ISSUER", zitadel.GetEndpoint("http"))
     .WithEnvironment("BETTER_AUTH_SECRET", betterAuthSecret)
-    // Aspire proxyer port 3000 til en fri prosessport som Next.js leser fra PORT
-    .WithHttpEndpoint(port: 3000, env: "PORT", name: "http")
+    // Ingen fast port: Aspire velger en ledig port og Next.js leser den fra PORT. Adressen står i dashboardet.
+    // Provisioneren under oppdaterer redirect-URI i Zitadel hvis porten endrer seg mellom kjøringer.
+    .WithHttpEndpoint(env: "PORT", name: "http")
     .WaitFor(api)
     .WaitFor(zitadel);
 

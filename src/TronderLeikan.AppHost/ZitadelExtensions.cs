@@ -7,15 +7,18 @@ internal static class ZitadelExtensions
 {
     /// <summary>
     /// Legger til Zitadel v4-stack (api + login + Traefik proxy) i Aspire-applikasjonen.
-    /// Returnerer Traefik-ressursen som er det felles inngangspunktet (port 8080).
+    /// Returnerer Traefik-ressursen som er det felles inngangspunktet på <paramref name="port"/>.
     /// </summary>
     internal static IResourceBuilder<ContainerResource> AddZitadel(
         this IDistributedApplicationBuilder builder,
         string name,
         IResourceBuilder<PostgresDatabaseResource> database,
         IResourceBuilder<ParameterResource> postgresAdminPassword,
-        IResourceBuilder<ParameterResource> masterKey)
+        IResourceBuilder<ParameterResource> masterKey,
+        int port)
     {
+        var externalUrl = $"http://localhost:{port}";
+
         // PostgreSQL-serveren som Zitadel-databasen bor på
         var postgresServer = database.Resource.Parent;
 
@@ -28,7 +31,7 @@ internal static class ZitadelExtensions
             .WithHttpHealthCheck("/debug/ready")
             // Masterkey må være nøyaktig 32 tegn; parameteren genereres med riktig lengde i AppHost.cs
             .WithArgs("start-from-init", "--masterkey", masterKey)
-            .WithEnvironment("ZITADEL_EXTERNALPORT", "8080")
+            .WithEnvironment("ZITADEL_EXTERNALPORT", port.ToString())
             .WithEnvironment("ZITADEL_EXTERNALDOMAIN", "localhost")
             .WithEnvironment("ZITADEL_EXTERNALSECURE", "false")
             .WithEnvironment("ZITADEL_TLS_ENABLED", "false")
@@ -63,11 +66,11 @@ internal static class ZitadelExtensions
             .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINE_USERNAME", "leikan-bootstrap")
             .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINE_NAME", "TronderLeikan bootstrap")
             .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_MACHINE_PAT_EXPIRATIONDATE", "2099-01-01T00:00:00Z")
-            // Login v2-URLer — peker på Traefik-proxyen (port 8080)
+            // Login v2-URLer — peker på Traefik-proxyen. Lagres i databasen ved første init, derfor må porten være stabil.
             .WithEnvironment("ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED", "true")
-            .WithEnvironment("ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_BASEURI", "http://localhost:8080/ui/v2/login/")
-            .WithEnvironment("ZITADEL_OIDC_DEFAULTLOGINURLV2", "http://localhost:8080/ui/v2/login/login?authRequest=")
-            .WithEnvironment("ZITADEL_OIDC_DEFAULTLOGOUTURLV2", "http://localhost:8080/ui/v2/login/logout?post_logout_redirect=")
+            .WithEnvironment("ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_BASEURI", $"{externalUrl}/ui/v2/login/")
+            .WithEnvironment("ZITADEL_OIDC_DEFAULTLOGINURLV2", $"{externalUrl}/ui/v2/login/login?authRequest=")
+            .WithEnvironment("ZITADEL_OIDC_DEFAULTLOGOUTURLV2", $"{externalUrl}/ui/v2/login/logout?post_logout_redirect=")
             .WaitFor(database);
 
         // zitadel-login — Next.js UI for innloggingsflyter (PathPrefix /ui/v2)
@@ -86,7 +89,7 @@ internal static class ZitadelExtensions
         // Konfigurasjonen leses fra ./traefik/ (bind-mountet som read-only)
         var traefik = builder
             .AddContainer($"{name}-proxy", "traefik", "v3.6.8")
-            .WithHttpEndpoint(port: 8080, targetPort: 80, name: "http")
+            .WithHttpEndpoint(port: port, targetPort: 80, name: "http")
             // Går gjennom Traefik til zitadel-api, så proxyen regnes som frisk først når hele stacken svarer
             .WithHttpHealthCheck("/debug/ready")
             .WithBindMount("./traefik", "/etc/traefik", isReadOnly: true)
