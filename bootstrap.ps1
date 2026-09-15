@@ -1,14 +1,22 @@
-# Sjekker at verktøyene TrønderLeikan trenger er på plass. Installerer ingenting.
+﻿#Requires -Version 7
+# Sjekker at verktøyene TrønderLeikan trenger er på plass. Installerer ingenting utover dotnet-verktøy fra manifestet.
 # Grønn linje = ok, rød linje = mangler (med lenke), gul linje = anbefalt men ikke påkrevd.
 # Exit-kode 1 hvis noe påkrevd mangler.
+#
+# Kjør slik hvis Windows nekter å kjøre script:
+#   pwsh -ExecutionPolicy Bypass -File .\bootstrap.ps1
 
 $ErrorActionPreference = "SilentlyContinue"
+Set-Location $PSScriptRoot
 $script:missing = $false
 
-function Ok($text)          { Write-Host "✓ " -ForegroundColor Green -NoNewline; Write-Host $text }
-function Fail($text, $hint) { Write-Host "✗ " -ForegroundColor Red -NoNewline; Write-Host $text; Write-Host "   → $hint"; $script:missing = $true }
-function Warn($text, $hint) { Write-Host "! " -ForegroundColor Yellow -NoNewline; Write-Host $text; Write-Host "   → $hint" }
+function Ok($text)          { Write-Host "[OK] " -ForegroundColor Green -NoNewline; Write-Host $text }
+function Fail($text, $hint) { Write-Host "[MANGLER] " -ForegroundColor Red -NoNewline; Write-Host $text; Write-Host "   -> $hint"; $script:missing = $true }
+function Warn($text, $hint) { Write-Host "[ANBEFALT] " -ForegroundColor Yellow -NoNewline; Write-Host $text; Write-Host "   -> $hint" }
 function Has($cmd)          { return [bool](Get-Command $cmd -ErrorAction SilentlyContinue) }
+# Kjører en kommando stille og returnerer true hvis exit-koden er 0. Docker skriver til stdout selv når daemonen er nede,
+# så vi kan ikke teste på output.
+function Succeeds([scriptblock]$cmd) { & $cmd *> $null; return $LASTEXITCODE -eq 0 }
 
 Write-Host "TrønderLeikan - sjekk av utviklingsmiljø" -ForegroundColor White
 Write-Host ""
@@ -18,23 +26,37 @@ $sdk10 = if (Has dotnet) { dotnet --list-sdks 2>$null | Where-Object { $_ -match
 if ($sdk10) { Ok ".NET SDK 10 ($(($sdk10 -split ' ')[0]))" }
 else { Fail ".NET SDK 10 mangler" "https://dotnet.microsoft.com/download/dotnet/10.0" }
 
+# HTTPS-utviklersertifikat. Aspire-dashboardet kjører på https og nettleseren klager uten et klarert sertifikat
+if (Has dotnet) {
+    if (Succeeds { dotnet dev-certs https --check --trust }) { Ok "HTTPS-utviklersertifikat er klarert" }
+    else { Warn "HTTPS-utviklersertifikatet er ikke klarert. Dashboardet gir sertifikatadvarsel" "Kjør: dotnet dev-certs https --trust" }
+}
+
 # Docker daemon
-if ((Has docker) -and (docker info 2>$null)) {
+if ((Has docker) -and (Succeeds { docker info })) {
     Ok "Docker kjører ($(docker version --format '{{.Server.Version}}' 2>$null))"
     $memBytes = [long](docker info --format '{{.MemTotal}}' 2>$null)
     if ($memBytes -gt 0 -and $memBytes -lt 4000000000) {
-        Warn "Docker har under 4 GB minne ($([int]($memBytes / 1MB)) MB). Zitadel kan bli treg ved første oppstart" "Øk minne i Docker Desktop → Settings → Resources"
+        Warn "Docker har under 4 GB minne ($([int]($memBytes / 1MB)) MB). Zitadel kan bli treg ved første oppstart" "Øk minne i Docker Desktop -> Settings -> Resources"
     }
 }
 else { Fail "Docker daemon svarer ikke" "https://www.docker.com/products/docker-desktop/ (start Docker Desktop)" }
 
-# Bun
-if (Has bun) { Ok "Bun $(bun --version)" }
-else { Fail "Bun mangler" "https://bun.sh/docs/installation" }
+# Node.js 22+ og npm. Frontend kjøres med npm av AppHost
+$nodeMajor = if (Has node) { [int](node -p 'process.versions.node.split(".")[0]' 2>$null) } else { 0 }
+if ($nodeMajor -ge 22 -and (Has npm)) { Ok "Node.js $(node --version), npm $(npm --version 2>$null)" }
+else { Fail "Node.js 22 eller nyere med npm mangler" "https://nodejs.org/en/download (LTS)" }
 
 # Git
 if (Has git) { Ok "$(git --version)" }
 else { Fail "Git mangler" "https://git-scm.com/downloads" }
+
+# GitHub CLI brukes i workshopen til issues, PR-er og PR-kommentarer, og må være innlogget
+if (Has gh) {
+    if (Succeeds { gh auth status }) { Ok "GitHub CLI innlogget" }
+    else { Fail "GitHub CLI finnes men er ikke innlogget" "Kjør: gh auth login" }
+}
+else { Fail "GitHub CLI mangler" "https://cli.github.com/" }
 
 # Aspire CLI er valgfritt: AppHost bygger med Aspire.AppHost.Sdk fra NuGet, men CLI gir «aspire run» og MCP-server
 if (Has aspire) { Ok "Aspire CLI $((aspire --version 2>$null | Select-Object -First 1) -split '\+' | Select-Object -First 1)" }
@@ -44,13 +66,11 @@ else { Warn "Aspire CLI mangler (valgfritt)" "https://aspire.dev/get-started/ins
 if (Has claude) { Ok "Claude Code $(claude --version 2>$null | Select-Object -First 1)" }
 else { Warn "Claude Code mangler. Bruker du en annen harness er det greit" "https://docs.anthropic.com/en/docs/claude-code/quickstart" }
 
-# GitHub CLI brukes i workshopen til PR-er og issues
-if (Has gh) {
-    gh auth status 2>$null | Out-Null
-    if ($LASTEXITCODE -eq 0) { Ok "GitHub CLI innlogget" }
-    else { Warn "GitHub CLI finnes men er ikke innlogget" "Kjør: gh auth login" }
+# dotnet-verktøy fra .config/dotnet-tools.json (dotnet-ef til migrasjoner)
+if (Has dotnet) {
+    if (Succeeds { dotnet tool restore }) { Ok "dotnet-verktøy gjenopprettet (dotnet ef)" }
+    else { Fail "dotnet tool restore feilet" "Kjør: dotnet tool restore, og se feilmeldingen" }
 }
-else { Warn "GitHub CLI mangler (brukes i workshopen)" "https://cli.github.com/" }
 
 Write-Host ""
 if ($script:missing) {
@@ -69,8 +89,8 @@ Passord og nøkler genereres automatisk første gang og lagres i user secrets.
 Første oppstart laster ned containere og initialiserer Zitadel, regn med 2-5 minutter.
 Aspire-dashboardet åpnes i nettleseren (URL med token står i terminalen).
 
-  Frontend:  http://localhost:3000
-  Admin:     http://localhost:3000/admin
+  Frontend:  lenken på «frontend» i dashboardet (porten velges av Aspire)
+  Admin:     samme adresse + /admin
   Bruker:    zitadel-admin@zitadel.localhost
   Passord:   Password1!
 "@

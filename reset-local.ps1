@@ -1,3 +1,4 @@
+﻿#Requires -Version 7
 # Nullstiller det lokale miljøet for TrønderLeikan: postgres-container, Aspire-nettverk, datavolum og Zitadel-bootstrap.
 # Rører ikke andre prosjekters containere. Stopp AppHost før du kjører dette.
 
@@ -26,7 +27,8 @@ foreach ($n in (docker network ls --format '{{.Name}}' | Where-Object { $_ -matc
     docker network rm $n | Out-Null
 }
 
-if (docker volume inspect leikan-postgres-data 2>$null) {
+docker volume inspect leikan-postgres-data *> $null
+if ($LASTEXITCODE -eq 0) {
     Write-Host "Fjerner volum leikan-postgres-data"
     docker volume rm leikan-postgres-data | Out-Null
 }
