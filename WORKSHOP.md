@@ -23,7 +23,7 @@ Gjør dette hjemme, senest torsdag 24. september, og bekreft i Slack-tråden.
 7. Åpne <http://localhost:3000/admin>, logg inn med `zitadel-admin@zitadel.localhost` og `Password1!`. Du skal lande på admin-dashboardet.
 8. Sørg for at agent-harnessen din er installert og innlogget. Claude Code er default, andre er tillatt på eget ansvar.
 
-Hvis noe stopper: skriv i Slack-tråden med feilmeldingen.
+Hvis noe stopper: sjekk «Feilsøking» i [README.md](README.md#feilsøking) først, og skriv så i Slack-tråden med feilmeldingen.
 Søndag 27. september har vi oppsamling på stedet for de som ikke fikk det til.
 
 ## Den røde tråden: fra sjømann til kaptein

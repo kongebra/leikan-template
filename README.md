@@ -112,7 +112,27 @@ dotnet user-secrets --project src/TronderLeikan.AppHost \
 
 ### Nullstill lokalt miljø
 
-Vil du starte helt på nytt: stopp AppHost, slett Docker-volumet `leikan-postgres-data`, slett `src/TronderLeikan.AppHost/zitadel-bootstrap/` og kjør `dotnet run` igjen.
+Vil du starte helt på nytt: stopp AppHost og kjør reset-scriptet.
+Det fjerner postgres-containeren, Aspire-nettverket, datavolumet `leikan-postgres-data` og `zitadel-bootstrap/`, og rører ikke andre prosjekter.
+
+```bash
+./reset-local.sh      # macOS / Linux
+.\reset-local.ps1     # Windows
+```
+
+### Feilsøking
+
+| Symptom | Årsak | Løsning |
+|---|---|---|
+| `zitadel-api` stopper med `lookup postgres.dev.internal ... no such host` | Postgres-containeren henger igjen fra en tidligere kjøring og er ikke på Aspire-nettverket | Stopp AppHost, kjør `reset-local`, start igjen |
+| `postgres` stopper med melding om `pg_upgrade` eller «database files are incompatible» | Volumet har data fra en eldre Postgres-versjon enn Aspire nå bruker | Samme som over |
+| AppHost feiler med `Zitadel er klar, men admin-PAT finnes ikke` | Zitadel-databasen er initialisert fra før, men `zitadel-bootstrap/` er slettet | Samme som over |
+| Innlogging gir 400 fra Zitadel med `redirect_uri` | Frontend kjører på en annen adresse enn da OIDC-appen ble laget | Start AppHost på nytt, provisioneren oppdaterer redirect-URI |
+| AppHost feiler med at port 3000 eller 8080 er i bruk | En annen app, ofte en annen Aspire-AppHost, bruker porten | Stopp den andre appen. Portene er faste fordi Zitadel og redirect-URI er bundet til dem |
+| Forsiden viser «Ingen turneringer ennå» | Frontend får ikke svar fra API-et | Sjekk at `api` er grønn i dashboardet, se konsolloggen til `frontend` |
+| `migrator` eller `api` stopper med `Could not load file or assembly` | Repoet ligger under `/tmp` på macOS, som er en symlink | Klon til en vanlig mappe |
+| Frontend starter ikke, `frontend-bun-install` feiler | Bun mangler eller nettverket blokkerer registry | Kjør `bun install` manuelt i `src/frontend` og se feilen |
+| Sesjonen forsvinner etter noen minutter | better-auth kjører uten database og lagrer sesjonen i cookie | Forventet. Cookien fornyes ved aktivitet og varer 7 dager |
 
 ### Kjør kun frontend (manuelt)
 
@@ -243,6 +263,22 @@ Swagger/OpenAPI er tilgjengelig på `/openapi/v1.json` og `/swagger` i developme
 | Tilskuer | 1 |
 
 Plasseringspoeng er **additive** — en vinner får deltakerpoeng + plasspoeng. Reglene er konfigurerbare per turnering. Ties støttes: flere kan dele samme plass.
+
+Arrangørpoeng avhenger av om arrangørene også spiller (`isOrganizersParticipating` på spillet):
+
+- Arrangør som **ikke** spiller får bare arrangørpoeng, med standardregler 3. Det er samme sum som en vanlig deltaker, så ingen taper på å arrangere.
+- Arrangør som **også** spiller får deltakerpoeng + arrangørtillegg, med standardregler 3 + 1 = 4, og eventuelle plasspoeng oppå det.
+
+Eksempel med standardregler: Kari arrangerer og spiller, vinner. Ola spiller, blir nummer to. Tor arrangerer uten å spille. Astrid ser på.
+
+| Person | Utregning | Poeng |
+|---|---|---|
+| Kari | 3 deltaker + 1 arrangør + 3 førsteplass | 7 |
+| Ola | 3 deltaker + 2 andreplass | 5 |
+| Tor | 3 arrangør uten deltakelse | 3 |
+| Astrid | 1 tilskuer | 1 |
+
+Flere scenarier ligger i [docs/TRONDER_LEIKAN.md](docs/TRONDER_LEIKAN.md) under «Example Scenarios».
 
 ---
 
