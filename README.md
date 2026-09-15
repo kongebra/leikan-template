@@ -70,7 +70,8 @@ Scriptet installerer ingenting, men sier tydelig hva som mangler og hvor du finn
 ### Kjør hele stacken
 
 ```bash
-dotnet run --project src/TronderLeikan.AppHost
+dotnet run --project src/TronderLeikan.AppHost   # med .NET SDK
+aspire run                                       # med Aspire CLI
 ```
 
 Aspire starter opp og orkestrerer:
