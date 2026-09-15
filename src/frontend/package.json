@@ -10,22 +10,22 @@
     "generate:api": "orval"
   },
   "dependencies": {
-    "better-auth": "^1.5.4",
-    "next": "16.1.6",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "better-auth": "^1.7.5",
+    "next": "16.3.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "19.2.14",
-    "@types/react-dom": "19.2.3",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.20.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "babel-plugin-react-compiler": "1.0.0",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.6",
-    "orval": "^8.5.3",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.3.5",
+    "orval": "^8.33.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3"
   },
   "ignoreScripts": [
     "sharp",
@@ -36,7 +36,7 @@
     "unrs-resolver"
   ],
   "overrides": {
-    "@types/react": "19.2.14",
-    "@types/react-dom": "19.2.3"
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0"
   }
 }
