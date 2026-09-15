@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Asp.Versioning;
 using TronderLeikan.Application.Common;
 using TronderLeikan.Infrastructure;
@@ -10,7 +11,9 @@ builder.Services.AddOpenTelemetry()
     .WithMetrics(m => m.AddMeter("TronderLeikan.Sender"));
 builder.Services.AddApplication();
 builder.Services.AddOpenApi();
-builder.Services.AddControllers();
+// Enums som navn i JSON (f.eks. "Simracing"), tall aksepteres fortsatt på input
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddProblemDetails();
 
 builder.Services.AddApiVersioning(options =>
@@ -33,8 +36,9 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
-
-app.UseHttpsRedirection();
+else
+    // Lokalt kalles API-et over http fra frontend via Aspire; en redirect til https med dev-sertifikat feiler i Node
+    app.UseHttpsRedirection();
 app.UseStatusCodePages();
 app.MapDefaultEndpoints();
 app.MapControllers();

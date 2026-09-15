@@ -67,6 +67,34 @@ public class TournamentsApiTests(TronderLeikanApiFactory factory)
     }
 
     [Fact]
+    public async Task GET_games_returnerer_spillene_i_turneringen()
+    {
+        var tournamentId = await (await _client.PostAsJsonAsync("/api/v1/tournaments",
+            new { name = "Spill-liste", slug = $"spill-{Guid.NewGuid():N}" }))
+            .Content.ReadFromJsonAsync<Guid>();
+
+        var gameResponse = await _client.PostAsJsonAsync("/api/v1/games", new { name = "Boccia", tournamentId });
+        gameResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        var gameId = await gameResponse.Content.ReadFromJsonAsync<Guid>();
+
+        var response = await _client.GetAsync($"/api/v1/tournaments/{tournamentId}/games");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetArrayLength().Should().Be(1);
+        body[0].GetProperty("id").GetGuid().Should().Be(gameId);
+        body[0].GetProperty("name").GetString().Should().Be("Boccia");
+        body[0].GetProperty("isDone").GetBoolean().Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GET_games_for_turnering_som_ikke_finnes_returnerer_404()
+    {
+        var response = await _client.GetAsync($"/api/v1/tournaments/{Guid.NewGuid()}/games");
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task GET_scoreboard_returnerer_tom_liste_uten_spill()
     {
         var id = await (await _client.PostAsJsonAsync("/api/v1/tournaments",

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using TronderLeikan.API.Common;
 using TronderLeikan.Application.Common.Interfaces;
+using TronderLeikan.Application.Games.Queries.GetGamesByTournament;
+using TronderLeikan.Application.Games.Responses;
 using TronderLeikan.Application.Tournaments.Commands.CreateTournament;
 using TronderLeikan.Application.Tournaments.Commands.UpdateTournamentPointRules;
 using TronderLeikan.Application.Tournaments.Queries.GetScoreboard;
@@ -35,6 +37,11 @@ public sealed class TournamentsController(ISender sender) : ApiControllerBase
         Guid id, UpdateTournamentPointRulesCommand command, CancellationToken ct) =>
         (await sender.Send(command with { TournamentId = id }, ct))
             .Match<ActionResult>(() => NoContent(), Problem);
+
+    // Spillene i en turnering, brukes av turnerings- og admin-sidene for navigasjon til enkeltspill
+    [HttpGet("{id:guid}/games")]
+    public async Task<ActionResult<GameSummaryResponse[]>> GetGames(Guid id, CancellationToken ct) =>
+        (await sender.Query(new GetGamesByTournamentQuery(id), ct)).Match(Ok, Problem);
 
     [HttpGet("{id:guid}/scoreboard")]
     public async Task<ActionResult<ScoreboardEntryResponse[]>> GetScoreboard(Guid id, CancellationToken ct) =>
