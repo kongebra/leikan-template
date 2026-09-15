@@ -17,7 +17,7 @@ Gjør dette hjemme, senest torsdag 24. september, og bekreft i Slack-tråden.
 1. Lag ditt eget repo fra templaten: åpne `github.com/kongebra/leikan-template` og klikk «Use this template». Navn og synlighet velger du selv.
 2. Klon repoet ditt.
 3. Kjør `./bootstrap.sh` (macOS/Linux) eller `.\bootstrap.ps1` (Windows). Alt skal være grønt.
-4. Kjør `dotnet run --project src/TronderLeikan.AppHost`. Første gang tar 2-5 minutter fordi containere lastes ned og Zitadel initialiseres.
+4. Kjør `dotnet run --project src/TronderLeikan.AppHost`. Første gang tar 2-5 minutter fordi containere lastes ned og Zitadel initialiseres. Målt 15. september på en Mac med containerne allerede lastet ned: under ett minutt fra kommando til grønt dashboard, rundt tre minutter uten cache.
 5. Åpne Aspire-dashboardet fra lenken i terminalen. Alle ressurser skal bli grønne.
 6. Åpne <http://localhost:3000>. Du skal se to turneringer med scoreboard.
 7. Åpne <http://localhost:3000/admin>, logg inn med `zitadel-admin@zitadel.localhost` og `Password1!`. Du skal lande på admin-dashboardet.
