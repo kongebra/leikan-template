@@ -1,20 +1,20 @@
 # AGENTS.md
 
-TrønderLeikan: plattform for turneringsstyring og poengberegning for faggruppa.
+TrønderLeikan: tournament management and scoring platform for the team.
 
 ## Stack
 
 - Backend: .NET 10, Clean Architecture (`src/TronderLeikan.*`)
-- Frontend: Next.js 16 i `src/frontend`
-- Orkestrering: .NET Aspire via `src/TronderLeikan.AppHost`
-- Infrastruktur: PostgreSQL, Valkey, Zitadel
+- Frontend: Next.js 16 in `src/frontend`
+- Orchestration: .NET Aspire via `src/TronderLeikan.AppHost`
+- Infrastructure: PostgreSQL, Valkey, Zitadel
 
-## Kjøring
+## Running
 
-- Hele stacken: `dotnet run --project src/TronderLeikan.AppHost`
-- Tester: `dotnet test`
+- Full stack: `dotnet run --project src/TronderLeikan.AppHost`
+- Tests: `dotnet test`
 
-## Dokumentasjon
+## Documentation
 
-- Domene og poengregler: `docs/TRONDER_LEIKAN.md`
-- Oppgaver: `docs/backlog.md`
+- Domain and scoring rules: `docs/TRONDER_LEIKAN.md`
+- Backlog: `docs/backlog.md`
