@@ -17,37 +17,77 @@ internal sealed class ZitadelOidcAppProvisioner(string zitadelBaseUrl, string bo
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    internal sealed record OidcClient(string ClientId, string ClientSecret);
+    internal sealed record OidcClient(string ClientId, string ClientSecret, string ProjectId, string AppId);
 
     private string CredentialsPath => Path.Combine(bootstrapDirectory, "frontend-oidc.json");
     private string AdminPatPath => Path.Combine(bootstrapDirectory, "admin.pat");
 
     /// <summary>
-    /// Returnerer client id og secret for frontend-appen. Leser fra fil hvis den finnes,
-    /// ellers opprettes prosjekt og app i Zitadel og resultatet lagres i bootstrap-mappen.
+    /// Returnerer client id og secret for frontend-appen. Leser fra fil hvis den finnes og sørger for at
+    /// redirect-URI-ene i Zitadel matcher frontendens adresse. Ellers opprettes prosjekt og app i Zitadel
+    /// og resultatet lagres i bootstrap-mappen.
     /// </summary>
     public async Task<OidcClient> EnsureAsync(CancellationToken ct)
     {
-        if (File.Exists(CredentialsPath))
-        {
-            var cached = JsonSerializer.Deserialize<OidcClient>(await File.ReadAllTextAsync(CredentialsPath, ct), Json);
-            if (cached is { ClientId.Length: > 0, ClientSecret.Length: > 0 })
-                return cached;
-        }
-
         using var http = new HttpClient { BaseAddress = new Uri(zitadelBaseUrl) };
         await WaitUntilReadyAsync(http, ct);
 
         var pat = (await File.ReadAllTextAsync(AdminPatPath, ct)).Trim();
         http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", pat);
 
+        if (await ReadCachedAsync(ct) is { } cached)
+        {
+            await EnsureRedirectUrisAsync(http, cached.ProjectId, cached.AppId, ct);
+            return cached;
+        }
+
         var projectId = await FindProjectIdAsync(http, ct) ?? await CreateProjectAsync(http, ct);
         var client = await FindAppAsync(http, projectId, ct) is { } existing
-            ? new OidcClient(existing.ClientId, await RegenerateSecretAsync(http, projectId, existing.AppId, ct))
+            ? new OidcClient(existing.ClientId, await RegenerateSecretAsync(http, projectId, existing.AppId, ct), projectId, existing.AppId)
             : await CreateAppAsync(http, projectId, ct);
 
+        await EnsureRedirectUrisAsync(http, client.ProjectId, client.AppId, ct);
         await File.WriteAllTextAsync(CredentialsPath, JsonSerializer.Serialize(client, Json), ct);
         return client;
+    }
+
+    // Eldre filer uten prosjekt- og app-id regnes som ugyldige, da provisjoneres appen på nytt
+    private async Task<OidcClient?> ReadCachedAsync(CancellationToken ct)
+    {
+        if (!File.Exists(CredentialsPath))
+            return null;
+
+        var cached = JsonSerializer.Deserialize<OidcClient>(await File.ReadAllTextAsync(CredentialsPath, ct), Json);
+        return cached is { ClientId.Length: > 0, ClientSecret.Length: > 0, ProjectId.Length: > 0, AppId.Length: > 0 }
+            ? cached
+            : null;
+    }
+
+    private string RedirectUri => $"{frontendBaseUrl}/api/auth/oauth2/callback/zitadel";
+
+    // Frontendens adresse kan endre seg (for eksempel annen port), da må Zitadel oppdateres, ellers svarer authorize med 400
+    private async Task EnsureRedirectUrisAsync(HttpClient http, string projectId, string appId, CancellationToken ct)
+    {
+        var app = await GetAsync<AppEnvelope>(http, $"/management/v1/projects/{projectId}/apps/{appId}", ct);
+        var current = app.App?.OidcConfig?.RedirectUris ?? [];
+        if (current.Count == 1 && current[0] == RedirectUri)
+            return;
+
+        var body = new
+        {
+            redirectUris = new[] { RedirectUri },
+            postLogoutRedirectUris = new[] { frontendBaseUrl },
+            responseTypes = new[] { "OIDC_RESPONSE_TYPE_CODE" },
+            grantTypes = new[] { "OIDC_GRANT_TYPE_AUTHORIZATION_CODE" },
+            appType = "OIDC_APP_TYPE_WEB",
+            authMethodType = "OIDC_AUTH_METHOD_TYPE_BASIC",
+            accessTokenType = "OIDC_TOKEN_TYPE_JWT",
+            devMode = true
+        };
+        using var response = await http.PutAsJsonAsync($"/management/v1/projects/{projectId}/apps/{appId}/oidc_config", body, Json, ct);
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException(
+                $"Zitadel oidc_config svarte {(int)response.StatusCode}: {await response.Content.ReadAsStringAsync(ct)}");
     }
 
     // Venter til Zitadel svarer på ready-endepunktet, og deretter kort på at admin-PAT er skrevet.
@@ -115,7 +155,7 @@ internal sealed class ZitadelOidcAppProvisioner(string zitadelBaseUrl, string bo
         var body = new
         {
             name = AppName,
-            redirectUris = new[] { $"{frontendBaseUrl}/api/auth/oauth2/callback/zitadel" },
+            redirectUris = new[] { RedirectUri },
             postLogoutRedirectUris = new[] { frontendBaseUrl },
             responseTypes = new[] { "OIDC_RESPONSE_TYPE_CODE" },
             grantTypes = new[] { "OIDC_GRANT_TYPE_AUTHORIZATION_CODE" },
@@ -125,7 +165,7 @@ internal sealed class ZitadelOidcAppProvisioner(string zitadelBaseUrl, string bo
             devMode = true
         };
         var result = await PostAsync<CreateAppResult>(http, $"/management/v1/projects/{projectId}/apps/oidc", body, ct);
-        return new OidcClient(result.ClientId, result.ClientSecret);
+        return new OidcClient(result.ClientId, result.ClientSecret, projectId, result.AppId);
     }
 
     // Secret returneres bare ved opprettelse, så finnes appen uten lagret fil må den genereres på nytt
@@ -133,6 +173,19 @@ internal sealed class ZitadelOidcAppProvisioner(string zitadelBaseUrl, string bo
     {
         var result = await PostAsync<SecretResult>(http, $"/management/v1/projects/{projectId}/apps/{appId}/oidc_config/_generate_client_secret", new { }, ct);
         return result.ClientSecret;
+    }
+
+    private static async Task<T> GetAsync<T>(HttpClient http, string path, CancellationToken ct)
+    {
+        using var response = await http.GetAsync(path, ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var error = await response.Content.ReadAsStringAsync(ct);
+            throw new InvalidOperationException($"Zitadel {path} svarte {(int)response.StatusCode}: {error}");
+        }
+
+        return await response.Content.ReadFromJsonAsync<T>(Json, ct)
+            ?? throw new InvalidOperationException($"Zitadel {path} returnerte tom respons.");
     }
 
     private static async Task<T> PostAsync<T>(HttpClient http, string path, object body, CancellationToken ct)
@@ -150,7 +203,8 @@ internal sealed class ZitadelOidcAppProvisioner(string zitadelBaseUrl, string bo
 
     private sealed record SearchResult<T>(List<T>? Result);
     private sealed record ProjectResult(string Id);
-    private sealed record OidcConfigResult(string ClientId);
+    private sealed record OidcConfigResult(string ClientId, List<string>? RedirectUris);
+    private sealed record AppEnvelope(AppResult? App);
     private sealed record AppResult(string Id, OidcConfigResult? OidcConfig)
     {
         public string AppId => Id;
