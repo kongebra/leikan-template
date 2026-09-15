@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using TronderLeikan.Domain.Games;

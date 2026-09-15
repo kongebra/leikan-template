@@ -7,8 +7,7 @@ namespace TronderLeikan.Api.Tests;
 
 public class TronderLeikanApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
-        .WithImage("postgres:16-alpine")
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine")
         .Build();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)

@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using TronderLeikan.Domain.Games;
 using TronderLeikan.Domain.Games.Events;
 

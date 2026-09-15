@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using TronderLeikan.Domain.Common;
 
 namespace TronderLeikan.Domain.Tests.Common;
