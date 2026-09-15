@@ -1,5 +1,7 @@
 # Trønder Leikan
 
+> **Workshop-deltaker?** Start med [WORKSHOP.md](WORKSHOP.md).
+
 Intern plattform for turneringsstyring og poengberegning. Brukes til å administrere konkurranser, registrere resultater og vise scoreboard — alt fra gaming-turneringer til simracing.
 
 ---
@@ -38,7 +40,8 @@ Trønder Leikan lar administratorer:
 | Frontend | Next.js 16, React 19, Tailwind CSS 4, TypeScript |
 | Database | PostgreSQL |
 | Cache | Valkey (Redis-kompatibel) |
-| Identity | Zitadel v4 |\n| Orkestrering | .NET Aspire |
+| Identity | Zitadel v4 |
+| Orkestrering | .NET Aspire |
 | Pakkehåndtering (frontend) | Bun |
 
 ---
@@ -47,22 +50,22 @@ Trønder Leikan lar administratorer:
 
 ### Forutsetninger
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for PostgreSQL og Valkey)
-- [Bun](https://bun.sh/) (for frontend)
-- .NET Aspire workload: `dotnet workload install aspire`
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (PostgreSQL og Zitadel kjører i containere)
+- [Bun](https://bun.sh/) (frontend)
+- [Git](https://git-scm.com/downloads)
 
-### User secrets (én gang etter kloning)
+Aspire trenger ingen workload; AppHost bruker `Aspire.AppHost.Sdk` fra NuGet.
+[Aspire CLI](https://aspire.dev/get-started/install-cli/) er valgfritt.
+
+Sjekk at alt er på plass:
 
 ```bash
-# Postgres-passord — brukes av database og Zitadel
-dotnet user-secrets --project src/TronderLeikan.AppHost \
-  set "Parameters:postgres-password" "postgres-dev-local!"
-
-# Zitadel masterkey — må være nøyaktig 32 tegn
-dotnet user-secrets --project src/TronderLeikan.AppHost \
-  set "Zitadel:MasterKey" "MasterkeyNeedsToHave32Chars!!!!!"
+./bootstrap.sh        # macOS / Linux
+.\bootstrap.ps1       # Windows
 ```
+
+Scriptet installerer ingenting, men sier tydelig hva som mangler og hvor du finner det.
 
 ### Kjør hele stacken
 
@@ -72,12 +75,43 @@ dotnet run --project src/TronderLeikan.AppHost
 
 Aspire starter opp og orkestrerer:
 
-1. **PostgreSQL** — database
-2. **DbMigrator** — kjører EF Core-migrasjoner automatisk
-3. **API** — venter til migrasjoner er fullført
-4. **Frontend** — Next.js via Bun
+1. **PostgreSQL** — database for TrønderLeikan og Zitadel
+2. **Zitadel** — identitetsleverandør (api, login-UI og Traefik-proxy på port 8080)
+3. **DbMigrator** — kjører EF Core-migrasjoner og legger inn demodata hvis databasen er tom
+4. **API** — venter til migrasjoner er fullført
+5. **Frontend** — Next.js via Bun på <http://localhost:3000>
 
-Aspire Dashboard er tilgjengelig på `https://localhost:15888` og viser logger, helse og traces for alle tjenester.
+Første oppstart tar 2-5 minutter fordi containere lastes ned og Zitadel initialiseres.
+Aspire Dashboard åpnes automatisk og viser logger, helse og traces for alle tjenester.
+
+### Innlogging
+
+Admin-panelet på <http://localhost:3000/admin> krever innlogging via Zitadel.
+Zitadel oppretter en admin-bruker ved første oppstart:
+
+| | |
+|---|---|
+| Bruker | `zitadel-admin@zitadel.localhost` |
+| Passord | `Password1!` |
+
+Zitadel-konsollen finnes på <http://localhost:8080/ui/console> med samme bruker.
+
+### Hemmeligheter
+
+Postgres-passord, Zitadel-masterkey og better-auth-secret genereres første gang og lagres i user secrets for AppHost.
+OIDC-klienten frontend bruker opprettes automatisk i Zitadel ved første oppstart og lagres i `src/TronderLeikan.AppHost/zitadel-bootstrap/` (gitignored).
+Du trenger ikke gjøre noe manuelt.
+
+Vil du overstyre en verdi:
+
+```bash
+dotnet user-secrets --project src/TronderLeikan.AppHost \
+  set "Parameters:postgres-password" "<passord>"
+```
+
+### Nullstill lokalt miljø
+
+Vil du starte helt på nytt: stopp AppHost, slett Docker-volumet `leikan-postgres-data`, slett `src/TronderLeikan.AppHost/zitadel-bootstrap/` og kjør `dotnet run` igjen.
 
 ### Kjør kun frontend (manuelt)
 
