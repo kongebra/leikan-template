@@ -13,19 +13,9 @@ internal static class ZitadelExtensions
         this IDistributedApplicationBuilder builder,
         string name,
         IResourceBuilder<PostgresDatabaseResource> database,
-        IResourceBuilder<ParameterResource> postgresAdminPassword)
+        IResourceBuilder<ParameterResource> postgresAdminPassword,
+        IResourceBuilder<ParameterResource> masterKey)
     {
-        // Masterkey hentes fra user secrets — må være nøyaktig 32 tegn
-        // Sett med: dotnet user-secrets set "Zitadel:MasterKey" "<32-tegns-nøkkel>"
-        var masterKey = builder.Configuration["Zitadel:MasterKey"]
-            ?? throw new InvalidOperationException(
-                "Zitadel:MasterKey er ikke konfigurert i user secrets. " +
-                "Kjør: dotnet user-secrets set \"Zitadel:MasterKey\" \"<nøyaktig 32 tegn>\"");
-
-        if (masterKey.Length != 32)
-            throw new InvalidOperationException(
-                $"Zitadel:MasterKey må være nøyaktig 32 tegn (er {masterKey.Length}).");
-
         // PostgreSQL-serveren som Zitadel-databasen bor på
         var postgresServer = database.Resource.Parent;
 
@@ -34,6 +24,9 @@ internal static class ZitadelExtensions
         var zitadelApi = builder
             .AddContainer($"{name}-api", "ghcr.io/zitadel/zitadel", "v4.11.0")
             .WithHttpEndpoint(targetPort: 8080, name: "http")
+            // Ready-endepunktet svarer først når Zitadel har kjørt init og setup mot databasen
+            .WithHttpHealthCheck("/debug/ready")
+            // Masterkey må være nøyaktig 32 tegn; parameteren genereres med riktig lengde i AppHost.cs
             .WithArgs("start-from-init", "--masterkey", masterKey)
             .WithEnvironment("ZITADEL_EXTERNALPORT", "8080")
             .WithEnvironment("ZITADEL_EXTERNALDOMAIN", "localhost")
@@ -61,7 +54,15 @@ internal static class ZitadelExtensions
             .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_USERNAME", "login-client")
             .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_NAME", "Automatically Initialized IAM_LOGIN_CLIENT")
             .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_PAT_EXPIRATIONDATE", "2099-01-01T00:00:00Z")
+            // Admin-bruker som opprettes ved første oppstart. Brukernavnet blir <USERNAME>@zitadel.localhost
+            .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME", "zitadel-admin")
+            .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD", "Password1!")
             .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORDCHANGEREQUIRED", "false")
+            // Maskinbruker med IAM_OWNER hvis PAT brukes til å opprette OIDC-appen automatisk, se ZitadelOidcAppProvisioner
+            .WithEnvironment("ZITADEL_FIRSTINSTANCE_PATPATH", "/zitadel/bootstrap/admin.pat")
+            .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINE_USERNAME", "leikan-bootstrap")
+            .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINE_NAME", "TronderLeikan bootstrap")
+            .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_MACHINE_PAT_EXPIRATIONDATE", "2099-01-01T00:00:00Z")
             // Login v2-URLer — peker på Traefik-proxyen (port 8080)
             .WithEnvironment("ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED", "true")
             .WithEnvironment("ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_BASEURI", "http://localhost:8080/ui/v2/login/")
@@ -86,6 +87,8 @@ internal static class ZitadelExtensions
         var traefik = builder
             .AddContainer($"{name}-proxy", "traefik", "v3.6.8")
             .WithHttpEndpoint(port: 8080, targetPort: 80, name: "http")
+            // Går gjennom Traefik til zitadel-api, så proxyen regnes som frisk først når hele stacken svarer
+            .WithHttpHealthCheck("/debug/ready")
             .WithBindMount("./traefik", "/etc/traefik", isReadOnly: true)
             .WithEnvironment("ZITADEL_API_INTERNAL_URL", zitadelApi.GetEndpoint("http"))
             .WithEnvironment("ZITADEL_LOGIN_INTERNAL_URL", zitadelLogin.GetEndpoint("http"))

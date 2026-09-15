@@ -1,8 +1,16 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-// Eksplisitt passord-parameter — samme verdi brukes av postgres og Zitadel
-// Sett i user secrets: dotnet user-secrets set "Parameters:postgres-password" "<passord>"
-var postgresPassword = builder.AddParameter("postgres-password", secret: true);
+// Hemmeligheter genereres første gang og lagres i user secrets, så «dotnet run» virker uten manuelle steg.
+// Overstyr ved behov: dotnet user-secrets set "Parameters:postgres-password" "<passord>" --project src/TronderLeikan.AppHost
+var postgresPassword = builder.AddParameter("postgres-password",
+    new GenerateParameterDefault { MinLength = 24, Special = false }, secret: true, persist: true);
+
+// Zitadel krever en masterkey på nøyaktig 32 tegn
+var zitadelMasterKey = builder.AddParameter("zitadel-masterkey",
+    new GenerateParameterDefault { MinLength = 32, Special = false }, secret: true, persist: true);
+
+var betterAuthSecret = builder.AddParameter("better-auth-secret",
+    new GenerateParameterDefault { MinLength = 32, Special = false }, secret: true, persist: true);
 
 // PostgreSQL — database for TrønderLeikan og Zitadel på samme instans
 // md5-autentisering brukes istedenfor scram-sha-256 fordi Zitadels Go pgx-driver
@@ -12,7 +20,7 @@ var postgres = builder.AddPostgres("postgres", password: postgresPassword)
     .WithEnvironment("POSTGRES_INITDB_ARGS", "--auth-host=md5 --auth-local=md5")
     // NB: Endre volum-navn (eller slett eksisterende volum) ved bytte av auth-oppsett,
     // ellers vil initdb-innstillingene over ikke kjøres på allerede initialisert data.
-    .WithDataVolume("tronderleikan-postgres-data-md5")
+    .WithDataVolume("leikan-postgres-data")
     .WithLifetime(ContainerLifetime.Persistent);
 var tronderleikanDb = postgres.AddDatabase("tronderleikan");
 
@@ -21,10 +29,10 @@ var zitadelDb = postgres.AddDatabase("zitadel");
 
 // Zitadel v4-stack: api + login UI + Traefik proxy
 // Traefik eksponeres på port 8080 som eneste inngangspunkt
-var zitadel = builder.AddZitadel("zitadel", zitadelDb, postgresPassword);
+var zitadel = builder.AddZitadel("zitadel", zitadelDb, postgresPassword, zitadelMasterKey);
 
-// DbMigrator kjøres automatisk ved oppstart, etter at PostgreSQL er klar
-// API venter til migrations er fullført
+// DbMigrator kjøres automatisk ved oppstart, etter at PostgreSQL er klar.
+// Kjører migrasjoner og legger inn demodata hvis databasen er tom. API venter til den er ferdig.
 var migrator = builder.AddProject<Projects.TronderLeikan_DbMigrator>("migrator")
     .WithReference(tronderleikanDb)
     .WaitFor(tronderleikanDb);
@@ -37,23 +45,34 @@ var api = builder.AddProject<Projects.TronderLeikan_API>("api")
     .WaitFor(zitadel)
     .WithHttpHealthCheck("/health");
 
-// Frontend — Next.js via Bun
+// Frontend — Next.js via Bun. Kjører «bun run dev» etter «bun install», så en fersk klon starter uten manuelle steg.
 // better-auth trenger ZITADEL_ISSUER, CLIENT_ID, CLIENT_SECRET og BETTER_AUTH_SECRET
-var betterAuthSecret = builder.AddParameter("better-auth-secret", secret: true);
-var zitadelClientId = builder.AddParameter("zitadel-client-id", secret: false);
-var zitadelClientSecret = builder.AddParameter("zitadel-client-secret", secret: true);
-
-var frontend = builder.AddBunApp("frontend", "../frontend")
+var frontend = builder.AddBunApp("frontend", "../frontend", entryPoint: "dev")
+    .WithBunPackageInstallation()
     .WithReference(api)
     .WithReference(zitadel.GetEndpoint("http"))
     .WithEnvironment("API_BASE_URL", api.GetEndpoint("http"))
     .WithEnvironment("ZITADEL_ISSUER", zitadel.GetEndpoint("http"))
-    .WithEnvironment("ZITADEL_CLIENT_ID", zitadelClientId)
-    .WithEnvironment("ZITADEL_CLIENT_SECRET", zitadelClientSecret)
     .WithEnvironment("BETTER_AUTH_SECRET", betterAuthSecret)
-    .WithHttpEndpoint(port: 3000, targetPort: 3000, name: "http")
-    .WaitFor(api);
+    // Aspire proxyer port 3000 til en fri prosessport som Next.js leser fra PORT
+    .WithHttpEndpoint(port: 3000, env: "PORT", name: "http")
+    .WaitFor(api)
+    .WaitFor(zitadel);
 
 frontend.WithEnvironment("BETTER_AUTH_URL", frontend.GetEndpoint("http"));
+
+// OIDC-klienten opprettes i Zitadel første gang frontend starter, og lagres i zitadel-bootstrap/ (gitignored).
+// Dermed slipper alle å opprette appen manuelt i Zitadel-konsollen.
+frontend.WithEnvironment(async ctx =>
+{
+    var provisioner = new ZitadelOidcAppProvisioner(
+        zitadelBaseUrl: zitadel.GetEndpoint("http").Url,
+        bootstrapDirectory: Path.Combine(builder.AppHostDirectory, "zitadel-bootstrap"),
+        frontendBaseUrl: frontend.GetEndpoint("http").Url);
+
+    var client = await provisioner.EnsureAsync(ctx.CancellationToken);
+    ctx.EnvironmentVariables["ZITADEL_CLIENT_ID"] = client.ClientId;
+    ctx.EnvironmentVariables["ZITADEL_CLIENT_SECRET"] = client.ClientSecret;
+});
 
 builder.Build().Run();
