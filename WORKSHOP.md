@@ -80,13 +80,13 @@ Skill-skepsis: en skill som ikke brukes er støy.
 
 **Hands-on:**
 
-1. Les `AGENTS.md` kritisk. Stemmer alt med koden? Be agenten sjekke hver påstand mot repoet.
-2. Rett det som er feil. Be agenten lagre korreksjonen selv.
-3. Gjør en liten endring med agenten, for eksempel et nytt felt på `Person`. Legg merke til hva du måtte forklare underveis.
-4. Flytt det du forklarte ut i en skill, for eksempel «legg til EF Core-migrasjon» eller «legg til ny admin-side».
-5. Test skillen i en frisk sesjon.
+1. `AGENTS.md` i repoet er med vilje tynn. Les den kritisk likevel: stemmer alt med koden? Be agenten sjekke hver påstand mot repoet, og rett det som er feil.
+2. Gjør en liten endring med agenten, for eksempel et nytt felt på `Person` med migrasjon, API og admin-side. Ikke forklar noe på forhånd.
+3. Se hva den gjorde annerledes enn du ville: språk i kommentarer, pakkebehandler, hvor logikken landet, hvordan migrasjonen ble laget, om den beviste noe. Korriger, og be agenten lagre hver lærdom i `AGENTS.md` selv.
+4. Skill fram det som er betinget: en skill for «ny EF Core-migrasjon», en for «ny admin-side». Det som gjelder alltid blir i `AGENTS.md`, resten flyttes ut.
+5. Test i en frisk sesjon: gjør en tilsvarende endring og se om den treffer på første forsøk.
 
-**Verifiser slik:** En frisk agent-sesjon gjør steg 3 riktig på første forsøk ved hjelp av memory og skill, uten at du forklarer noe.
+**Verifiser slik:** En frisk agent-sesjon gjør steg 2 riktig på første forsøk ved hjelp av memory og skill, uten at du forklarer noe. `AGENTS.md` er fortsatt kort nok til å leses på ett minutt.
 
 **Gå dypere:** Legg til en hook som kjører `dotnet build` etter hver filendring i `src/`, og vurder om det var verdt det.
 

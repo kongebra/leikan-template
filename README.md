@@ -15,7 +15,6 @@ Intern plattform for turneringsstyring og poengberegning. Brukes til å administ
 - [Arkitektur](#arkitektur)
 - [API-oversikt](#api-oversikt)
 - [Domenemodell og poengregler](#domenemodell-og-poengregler)
-- [Konvensjoner](#konvensjoner)
 - [Testing](#testing)
 
 ---
@@ -282,22 +281,6 @@ Flere scenarier ligger i [docs/TRONDER_LEIKAN.md](docs/TRONDER_LEIKAN.md) under 
 
 ---
 
-## Konvensjoner
-
-- **Kode:** engelsk
-- **Kommentarer:** norsk (inkl. æ, ø, å)
-- **C#:** .NET 10-mønstre — primary constructors, `file`-scoped namespaces, implicit usings
-- **Frontend:** Bun som pakkebehandler — bruk aldri `npm` eller `yarn`
-- **Migrasjoner:** genereres fra `Infrastructure`-prosjektet med API som startup-prosjekt
-
-```bash
-dotnet ef migrations add <Navn> \
-  --project src/TronderLeikan.Infrastructure \
-  --startup-project src/TronderLeikan.API
-```
-
----
-
 ## Testing
 
 ### Kjør alle tester
@@ -315,11 +298,3 @@ dotnet test --filter "FullyQualifiedName~PersonsApiTests"
 ### Akseptansetester (API)
 
 Testprosjektet `TronderLeikan.Api.Tests` bruker `WebApplicationFactory` + `Testcontainers.PostgreSql` — ekte PostgreSQL-container, black-box mot HTTP-kontrakten. Ingen referanser til Application- eller Domain-typer i testene.
-
-### Sjekkliste før merge
-
-1. Ligger forretningslogikk i `Application` eller `Domain` — ikke i `API`?
-2. Er nye tjenester/miljøvariabler lagt til i `AppHost`?
-3. Er nye domain events håndtert via Outbox (ikke direkte dispatch)?
-4. Er event-handlere idempotente?
-5. Inneholder PR-beskrivelsen en folkelig oppsummering på norsk?
