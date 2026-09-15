@@ -35,18 +35,15 @@ internal sealed class ZitadelOidcAppProvisioner(string zitadelBaseUrl, string bo
         var pat = (await File.ReadAllTextAsync(AdminPatPath, ct)).Trim();
         http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", pat);
 
-        if (await ReadCachedAsync(ct) is { } cached)
-        {
-            await EnsureRedirectUrisAsync(http, cached.ProjectId, cached.AppId, ct);
+        // Finnes appen fortsatt i Zitadel gjenbrukes den. Er Zitadel nullstilt (nytt volum) provisjoneres alt på nytt.
+        if (await ReadCachedAsync(ct) is { } cached && await EnsureRedirectUrisAsync(http, cached.ProjectId, cached.AppId, ct))
             return cached;
-        }
 
         var projectId = await FindProjectIdAsync(http, ct) ?? await CreateProjectAsync(http, ct);
         var client = await FindAppAsync(http, projectId, ct) is { } existing
             ? new OidcClient(existing.ClientId, await RegenerateSecretAsync(http, projectId, existing.AppId, ct), projectId, existing.AppId)
             : await CreateAppAsync(http, projectId, ct);
 
-        await EnsureRedirectUrisAsync(http, client.ProjectId, client.AppId, ct);
         await File.WriteAllTextAsync(CredentialsPath, JsonSerializer.Serialize(client, Json), ct);
         return client;
     }
@@ -63,15 +60,20 @@ internal sealed class ZitadelOidcAppProvisioner(string zitadelBaseUrl, string bo
             : null;
     }
 
-    private string RedirectUri => $"{frontendBaseUrl}/api/auth/oauth2/callback/zitadel";
+    // better-auth sin generic-oauth bruker samme callback som innebygde providere
+    private string RedirectUri => $"{frontendBaseUrl}/api/auth/callback/zitadel";
 
-    // Frontendens adresse kan endre seg (for eksempel annen port), da må Zitadel oppdateres, ellers svarer authorize med 400
-    private async Task EnsureRedirectUrisAsync(HttpClient http, string projectId, string appId, CancellationToken ct)
+    // Frontendens adresse kan endre seg (for eksempel annen port), da må Zitadel oppdateres, ellers svarer authorize med 400.
+    // Returnerer false hvis appen ikke finnes lenger.
+    private async Task<bool> EnsureRedirectUrisAsync(HttpClient http, string projectId, string appId, CancellationToken ct)
     {
         var app = await GetAsync<AppEnvelope>(http, $"/management/v1/projects/{projectId}/apps/{appId}", ct);
-        var current = app.App?.OidcConfig?.RedirectUris ?? [];
+        if (app?.App?.OidcConfig is null)
+            return false;
+
+        var current = app.App.OidcConfig.RedirectUris ?? [];
         if (current.Count == 1 && current[0] == RedirectUri)
-            return;
+            return true;
 
         var body = new
         {
@@ -88,6 +90,7 @@ internal sealed class ZitadelOidcAppProvisioner(string zitadelBaseUrl, string bo
         if (!response.IsSuccessStatusCode)
             throw new InvalidOperationException(
                 $"Zitadel oidc_config svarte {(int)response.StatusCode}: {await response.Content.ReadAsStringAsync(ct)}");
+        return true;
     }
 
     // Venter til Zitadel svarer på ready-endepunktet, og deretter kort på at admin-PAT er skrevet.
@@ -175,9 +178,12 @@ internal sealed class ZitadelOidcAppProvisioner(string zitadelBaseUrl, string bo
         return result.ClientSecret;
     }
 
-    private static async Task<T> GetAsync<T>(HttpClient http, string path, CancellationToken ct)
+    // Returnerer null ved 404, kaster på andre feil
+    private static async Task<T?> GetAsync<T>(HttpClient http, string path, CancellationToken ct) where T : class
     {
         using var response = await http.GetAsync(path, ct);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            return null;
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync(ct);

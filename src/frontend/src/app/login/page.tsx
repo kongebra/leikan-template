@@ -3,7 +3,7 @@
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
 
-// Innloggingsside — klientkomponent siden den kaller authClient.signIn.oauth2()
+// Innloggingsside — klientkomponent siden den kaller authClient.signIn.social()
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -11,9 +11,9 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       // Starter Zitadel OIDC-innloggingsflyt med omdirigering til /admin etter suksess
-      // Zitadel er konfigurert via genericOAuth-pluginen, ikke som innebygd social provider
-      await authClient.signIn.oauth2({
-        providerId: "zitadel",
+      // Zitadel registreres av genericOAuth-pluginen som en social provider
+      await authClient.signIn.social({
+        provider: "zitadel",
         callbackURL: "/admin",
       });
     } catch {
