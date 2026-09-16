@@ -42,11 +42,11 @@ else
   fail "Docker daemon svarer ikke" "https://www.docker.com/products/docker-desktop/ (start Docker Desktop)"
 fi
 
-# Node.js 22+ og npm. Frontend kjøres med npm av AppHost
-if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1 && [ "$(node -p 'process.versions.node.split(".")[0]')" -ge 22 ]; then
+# Node.js 24+ og npm. Frontend kjøres med npm av AppHost
+if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1 && [ "$(node -p 'process.versions.node.split(".")[0]')" -ge 24 ]; then
   ok "Node.js $(node --version), npm $(npm --version 2>/dev/null)"
 else
-  fail "Node.js 22 eller nyere med npm mangler" "https://nodejs.org/en/download (LTS)"
+  fail "Node.js 24 eller nyere med npm mangler" "https://nodejs.org/en/download (LTS)"
 fi
 
 # Git

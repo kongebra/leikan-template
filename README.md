@@ -23,7 +23,7 @@ Domenet er beskrevet i [docs/TRONDER_LEIKAN.md](docs/TRONDER_LEIKAN.md).
 | Database | PostgreSQL |
 | Identity | Zitadel v4 |
 | Orkestrering | .NET Aspire |
-| Pakkehåndtering (frontend) | npm (Node.js 22+) |
+| Pakkehåndtering (frontend) | npm (Node.js 24+) |
 
 ---
 
@@ -33,7 +33,7 @@ Domenet er beskrevet i [docs/TRONDER_LEIKAN.md](docs/TRONDER_LEIKAN.md).
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (PostgreSQL og Zitadel kjører i containere)
-- [Node.js 22 eller nyere](https://nodejs.org/en/download) med npm (frontend)
+- [Node.js 24 eller nyere](https://nodejs.org/en/download) med npm (frontend)
 - [Git](https://git-scm.com/downloads)
 - [GitHub CLI](https://cli.github.com/) er anbefalt til issues og PR-er, men GitHub MCP eller nettleseren fungerer også
 

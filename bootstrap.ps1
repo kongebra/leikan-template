@@ -42,10 +42,10 @@ if ((Has docker) -and (Succeeds { docker info })) {
 }
 else { Fail "Docker daemon svarer ikke" "https://www.docker.com/products/docker-desktop/ (start Docker Desktop)" }
 
-# Node.js 22+ og npm. Frontend kjøres med npm av AppHost
+# Node.js 24+ og npm. Frontend kjøres med npm av AppHost
 $nodeMajor = if (Has node) { [int](node -p 'process.versions.node.split(".")[0]' 2>$null) } else { 0 }
-if ($nodeMajor -ge 22 -and (Has npm)) { Ok "Node.js $(node --version), npm $(npm --version 2>$null)" }
-else { Fail "Node.js 22 eller nyere med npm mangler" "https://nodejs.org/en/download (LTS)" }
+if ($nodeMajor -ge 24 -and (Has npm)) { Ok "Node.js $(node --version), npm $(npm --version 2>$null)" }
+else { Fail "Node.js 24 eller nyere med npm mangler" "https://nodejs.org/en/download (LTS)" }
 
 # Git
 if (Has git) { Ok "$(git --version)" }

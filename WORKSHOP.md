@@ -75,7 +75,7 @@ Alt utover dette er opp til deg.
 
 1. Lag ditt eget repo fra templaten: åpne `github.com/kongebra/leikan-template` og klikk «Use this template».
 2. Klon repoet ditt.
-3. Kjør `./bootstrap.sh` (macOS/Linux) eller `pwsh -ExecutionPolicy Bypass -File .\bootstrap.ps1` (Windows, PowerShell 7). Alt påkrevd skal være grønt. Scriptet krever .NET 10, Docker, Node.js 22+, Git og GitHub CLI.
+3. Kjør `./bootstrap.sh` (macOS/Linux) eller `pwsh -ExecutionPolicy Bypass -File .\bootstrap.ps1` (Windows, PowerShell 7). Alt påkrevd skal være grønt. Scriptet krever .NET 10, Docker, Node.js 24+, Git og GitHub CLI.
 4. Logg inn i GitHub CLI med `gh auth login`.
 5. Kjør `dotnet run --project src/TronderLeikan.AppHost`. Første gang tar 2-5 minutter.
 6. Åpne Aspire-dashboardet fra lenken i terminalen. Alle ressurser skal bli grønne.

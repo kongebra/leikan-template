@@ -25,7 +25,7 @@ internal static class ZitadelExtensions
         // zitadel-api — Go-backend som håndterer OIDC, GRPC og admin-API
         // start-from-init oppretter schema og admin-bruker ved første oppstart
         var zitadelApi = builder
-            .AddContainer($"{name}-api", "ghcr.io/zitadel/zitadel", "v4.11.0")
+            .AddContainer($"{name}-api", "ghcr.io/zitadel/zitadel", "v4.17.3")
             .WithHttpEndpoint(targetPort: 8080, name: "http")
             // Ready-endepunktet svarer først når Zitadel har kjørt init og setup mot databasen
             .WithHttpHealthCheck("/debug/ready")
@@ -75,7 +75,7 @@ internal static class ZitadelExtensions
 
         // zitadel-login — Next.js UI for innloggingsflyter (PathPrefix /ui/v2)
         var zitadelLogin = builder
-            .AddContainer($"{name}-login", "ghcr.io/zitadel/zitadel-login", "v4.11.0")
+            .AddContainer($"{name}-login", "ghcr.io/zitadel/zitadel-login", "v4.17.3")
             .WithHttpEndpoint(targetPort: 3000, name: "http")
             .WithEnvironment("ZITADEL_API_URL", zitadelApi.GetEndpoint("http"))
             .WithEnvironment("NEXT_PUBLIC_BASE_PATH", "/ui/v2/login")
@@ -88,7 +88,7 @@ internal static class ZitadelExtensions
         // Traefik — felles inngangspunkt som ruter til riktig backend
         // Konfigurasjonen leses fra ./traefik/ (bind-mountet som read-only)
         var traefik = builder
-            .AddContainer($"{name}-proxy", "traefik", "v3.6.8")
+            .AddContainer($"{name}-proxy", "traefik", "v3.7.13")
             .WithHttpEndpoint(port: port, targetPort: 80, name: "http")
             // Går gjennom Traefik til zitadel-api, så proxyen regnes som frisk først når hele stacken svarer
             .WithHttpHealthCheck("/debug/ready")
