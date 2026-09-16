@@ -91,6 +91,5 @@ Som administrator vil jeg importere alle ansatte fra en liste i stedet for å ta
 |---|---|
 | 1 Konfigurasjon | Nytt felt på Person uten story. Gå dypere: story 8 i plan mode mot story 15 direkte. |
 | 2 Kontekst | Story 2 i én lang sesjon for å se når konteksten degraderer. |
-| Langkjøring (starter dag 1) | Story 10 eller 16 for de fleste, 1 eller 5 for de som vil ha mer. |
-| 4 Strukturert output og review | Én story, plan først, E2E-bevis til slutt. Korte stories som 6, 11 eller 13. |
-| 5 Orkestrering | Story 1 dekomponeres på papir. Story 12 og 9 kjøres parallelt i worktrees. |
+| 4 Plan, tester, bevis og review | Én story, plan først, tester, E2E-bevis til slutt. Korte stories som 6, 11 eller 13. |
+| 5 Orkestrering | Story 1 dekomponeres på papir. Gå dypere: story 12 og 9 parallelt i worktrees. |
