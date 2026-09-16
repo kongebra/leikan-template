@@ -227,3 +227,6 @@ node_modules/
 
 # Playwright MCP-artefakter
 .playwright-mcp/
+
+# Lokal konfig for hook-verktøy
+.impeccable/
