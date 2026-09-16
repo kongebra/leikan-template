@@ -126,8 +126,7 @@ Skriv ned tre ting du tror agenten gjør annerledes enn du ville: språk i komme
 Start en frisk sesjon i repoet uten memory.
 Be agenten legge til feltet «Kallenavn» på `Person` med migrasjon, API og admin-side.
 Sammenlign med lista di.
-
-Fasit for de som ikke kjenner stacken: migrasjonen lages med `dotnet ef migrations add` i `src/TronderLeikan.Infrastructure`, og admin-siden ligger under `src/frontend/src/app/(admin)/admin/persons`.
+Kjenner du ikke stacken, finn ut sammen med partneren hvor migrasjoner og admin-sider faktisk ligger før du dømmer.
 
 **Føringer**
 
@@ -169,8 +168,7 @@ Forklar avviket for partneren.
 
 **Føringer**
 
-- **Hierarkiet.** Lag tre memory-filer med motstridende innhold: `~/.claude/CLAUDE.md` sier «en KongleKnute er verdt 14 kroner», rot-`CLAUDE.md` sier 78543 kroner, og `src/TronderLeikan.Api/CLAUDE.md` sier -222 kroner. Skriv ned hva du tror agenten svarer når du spør fra rota, og når du spør etter at den har lest en fil i Api-mappa. Test. Kjør `/context` etter hver. Teorien mange har er at nærmeste vinner. Finn ut om det stemmer, og hva det betyr for hvordan du skriver memory. Rydd opp etterpå.
-- **Forgiftning.** Lim inn lenke til en bloggpost om generisk EF Core repository-mønster i prompten, uten å si at den skal følges, og be agenten lage et datalag for Player-oppslag som kalles fra en handler. Skriv ned først hva du tror den bygger. Repoet bruker `DbContext` direkte i handlers. Kjør så samme oppgave i frisk sesjon uten lenken. Frontend-variant: lenke til en React Query-artikkel, og be om datahenting til en ny side, i et repo som bruker `fetch` i Server Components.
+- **Forgiftning.** Lim inn lenke til en bloggpost om generisk EF Core repository-mønster i prompten, uten å si at den skal følges, og be agenten lage et datalag for Player-oppslag som kalles fra en handler. Skriv ned først hva du tror den bygger, og hvordan repoet gjør det i dag. Kjør så samme oppgave i frisk sesjon uten lenken. Frontend-variant: lenke til en React Query-artikkel, og be om datahenting til en ny side.
 - **Uoverensstemmelsen.** Partneren din endrer én regel i din kopi av [docs/TRONDER_LEIKAN.md](docs/TRONDER_LEIKAN.md) uten å si hvilken, for eksempel hvordan lik poengsum rangeres. Still spørsmål til agenten om poengberegningen til du finner stedet der dokument og kode er uenige. Hvilken kilde stolte agenten på, og sa den det selv?
 - **Degradering.** Ta story 2 i én lang sesjon uten å rydde. Noter turen der agenten glemte en beslutning fra tidligere i samtalen. Skriv så ned tre kategorier i diffen du skummet i stedet for å lese. Den lista trenger du i modul 4.
 - **Den du ikke skrev.** `src/frontend/AGENTS.md` skrives av `next dev` hver gang stacken starter. Hvem skrev den, hva sier den til agenten din, og når lastes den?
@@ -185,9 +183,9 @@ Forklar avviket for partneren.
 
 **Ta med hjem:** setningen i memory om hva som er kilden når kode og dokument er uenige. Lista over hva du skummer.
 
-**Ikke Claude Code?** Alt i føringene er verktøyuavhengig unntatt `/context` og `/compact`. Copilot: ny chat er frisk sesjon, hierarkiet er `.github/copilot-instructions.md` pluss `applyTo`-filer. Pi: har utforskningssubagent, ingen `/context`.
+**Ikke Claude Code?** Alt i føringene er verktøyuavhengig unntatt `/context` og `/compact`. Copilot: ny chat er frisk sesjon. Pi: har utforskningssubagent, ingen `/context`.
 
-**Recap:** hvem fikk repository-mønsteret, og hvem fikk det ikke? Hva svarte agenten på KongleKnute, og hva sa `/context`? Når startet du frisk, og hva måtte du gjenta?
+**Recap:** hvem fikk repository-mønsteret, og hvem fikk det ikke? Når startet du frisk, og hva måtte du gjenta?
 
 ### Modul 3: Verktøy og MCP
 
@@ -206,7 +204,7 @@ Se hva den gjør.
 
 **Føringer**
 
-- **CLI mot MCP, målt.** Skriv først ned hvilken du tror er billigst. Hent scoreboard for en turnering via `curl` mot `/api/v1/tournaments/{id}/scoreboard` og via Aspire MCP. Opprett en issue via `gh` og via GitHub MCP hvis du har den. Noter tokens og tid, og post tallene i Slack-tråden.
+- **CLI mot MCP, målt.** Skriv først ned hvilken du tror er billigst. Hent scoreboard for en turnering via `curl` mot API-et og via Aspire MCP. Opprett en issue via `gh` og via GitHub MCP hvis du har den. Noter tokens og tid, og post tallene i Slack-tråden.
 - **En liten MCP-server.** Tidsboks: 45 minutter. Ett lesende verktøy, `hent_scoreboard`, mot turnerings-API-et. La agenten skrive transport og boilerplate. Du bruker tiden på beskrivelsen og på feilresponsen. Når turneringen ikke finnes eller API-et er nede, skal verktøyet svare med `isError`, `errorCategory`, `isRetryable`, det som ble forsøkt, og eventuelt delresultat. Se hva agenten gjør med hver kategori.
 - **Hvor ligger konfigurasjonen.** Legg serveren i prosjektets `.mcp.json`. Når hører en server hjemme der, og når hører den hjemme i `~/.claude.json`?
 - **Innebygde verktøy.** Be agenten finne alle steder poengregler brukes. Så den Grep, Glob eller leste den filer i sin helhet? Be den forklare valget.
@@ -214,7 +212,7 @@ Se hva den gjør.
 **Gå dypere**
 
 - Legg til `hent_spill` og skriv beskrivelser du tror er tydelige. Gjett først hvilken formulering som forvirrer. Gi agenten tre oppgaver som krever riktig valg, og se om den treffer.
-- Legg til `registrer_resultat`. API-et er uautentisert, så dette er en åpen skrivekanal. Verktøyet skal kreve bekreftelse per kall i permission-oppsettet. Gjenta issue-eksperimentet fra «gjør dette først» med skriveverktøyet tilgjengelig.
+- Legg til `registrer_resultat`. Dette er en skrivekanal inn i systemet. Verktøyet skal kreve bekreftelse per kall i permission-oppsettet. Gjenta issue-eksperimentet fra «gjør dette først» med skriveverktøyet tilgjengelig.
 - Definer to subagenter i `.claude/agents/`: én leser med bare Read, Grep, Glob og `hent_*`, én skriver med `registrer_resultat`. Begrunn fordelingen.
 - Eksponer turneringslista som en MCP resource i stedet for et verktøy. Hva endrer det for agenten?
 
@@ -265,7 +263,7 @@ Poenget er at du ikke bygger før planen holder.
 
 **Føringer**
 
-- **Planen godkjennes ikke før den svarer på fire ting.** Hva endres. Hvilke tester skrives, og hvor. Hvordan bevises det mot kjørende system. Hva kan gå galt. Foretrekk integrasjonstester med `WebApplicationFactory` mot API-et. Unit-tester der det gir mest mening, for eksempel i poengberegningen. Story 11 har en invariant, spør deg selv hvilket lag den lander i.
+- **Planen godkjennes ikke før den svarer på fire ting.** Hva endres. Hvilke tester skrives, og hvor. Hvordan bevises det mot kjørende system. Hva kan gå galt. Foretrekk integrasjonstester mot API-et, og unit-tester der det gir mest mening. Spør deg selv hvilket lag hver regel lander i.
 - **Rød før grønn.** Testen skal feile før implementasjonen og gå etter, og PR-en skal vise det.
 - **Bevis mot AppHost.** API-kall eller Playwright. «Det kompilerer» er ikke bevis. Åpne PR med plan, tester og bevis i beskrivelsen.
 - **Review-agent med schema.** Skriv `.claude/agents/review.md`: frisk kontekst, begrenset verktøytilgang, oppdrag om å finne feil, og en sjekkliste med risikoskala. Skriv et JSON-schema for funnene med feltene fil, linje, alvorlighet, kategori, begrunnelse og forslag, og krev at output validerer. Kjør den mot din egen PR. Be så hovedagenten reviewe egen kode og sammenlign. Hva fant bare den friske?
@@ -340,7 +338,7 @@ Dette må du lese selv.
 | Begrep | Betydning |
 |---|---|
 | Harness | Verktøyet som gir modellen hender: filsystem, shell, git, nettleser. Claude Code, Codex CLI, Copilot, Pi. |
-| Memory | `CLAUDE.md` eller `AGENTS.md`. Lastes ved oppstart fra arbeidsmappa og oppover, alle sammen, ingen overstyrer. Kort, sant, gjelder alltid. |
+| Memory | `CLAUDE.md` eller `AGENTS.md`. Lastes ved oppstart. Kort, sant, gjelder alltid. |
 | Rule | Fil i `.claude/rules/` som lastes bare når agenten jobber i stier som matcher `paths:`. |
 | Skill | Instruksjoner som lastes ved behov for én type oppgave. Frontmatter styrer `context: fork` og `allowed-tools`. |
 | Deny | `permissions.deny` i `.claude/settings.json`. Statisk regel som harnessen håndhever uansett hva agenten vil. |
