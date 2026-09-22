@@ -125,7 +125,8 @@ Det fjerner postgres-containeren, Aspire-nettverket, datavolumet `leikan-postgre
 |---|---|---|
 | `zitadel-api` stopper med `lookup postgres.dev.internal ... no such host` | Postgres-containeren henger igjen fra en tidligere kjøring og er ikke på Aspire-nettverket | Stopp AppHost, kjør `reset-local`, start igjen |
 | `postgres` stopper med melding om `pg_upgrade` eller «database files are incompatible» | Volumet har data fra en eldre Postgres-versjon enn Aspire nå bruker | Samme som over |
-| AppHost feiler med `Zitadel er klar, men admin-PAT finnes ikke` | Zitadel-databasen er initialisert fra før, men `zitadel-bootstrap/` er slettet | Samme som over |
+| AppHost feiler med `Zitadel er klar, men admin-PAT finnes ikke` | Du kjører AppHost fra en worktree. Zitadel-porten er fast, Postgres-volumet er delt og `zitadel-bootstrap/` ligger bare i hovedklonen | Kjør AppHost fra hovedklonen. Ikke slett volumet, det ødelegger for alt annet som kjører |
+| Samme melding, og du kjører fra hovedklonen | Zitadel-databasen er initialisert fra før, men `zitadel-bootstrap/` er slettet | Stopp AppHost, kjør `reset-local`, start igjen |
 | Innlogging gir 400 fra Zitadel med `redirect_uri` | Frontend kjører på en annen adresse enn da OIDC-appen ble laget | Start AppHost på nytt, provisioneren oppdaterer redirect-URI |
 | AppHost feiler med at port 8080 er i bruk | En annen app bruker porten Zitadel trenger | Sett `Zitadel:Port` som beskrevet under «Porter», kjør `reset-local`, start igjen |
 | Innlogging havner på feil port eller gir 404 fra Zitadel | `Zitadel:Port` er endret etter at databasen ble initialisert | Kjør `reset-local` og start igjen |
