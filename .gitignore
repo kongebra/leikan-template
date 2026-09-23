@@ -216,9 +216,9 @@ FakesAssemblies/
 
 # Git worktrees
 .worktrees/
+.claude/worktrees/
 # Agent-harness lokale filer (deltakerne bygger sitt eget)
 .claude/settings.local.json
-.agents/
 skills-lock.json
 
 # Frontend

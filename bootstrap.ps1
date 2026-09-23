@@ -63,7 +63,13 @@ if (Has aspire) { Ok "Aspire CLI $((aspire --version 2>$null | Select-Object -Fi
 else { Warn "Aspire CLI mangler (valgfritt)" "https://aspire.dev/get-started/install-cli/" }
 
 # Agent-harness. Claude Code er default i workshopen, men andre er lov
-if (Has claude) { Ok "Claude Code $(claude --version 2>$null | Select-Object -First 1)" }
+# 2.1.281 er første versjon som leser AGENTS.md i alle sesjoner, også med telemetri av
+$claudeMin = [version]'2.1.281'
+if (Has claude) {
+    $claudeVersion = if ((claude --version 2>$null | Select-Object -First 1) -match '(\d+\.\d+\.\d+)') { [version]$Matches[1] } else { $null }
+    if ($claudeVersion -and $claudeVersion -ge $claudeMin) { Ok "Claude Code $claudeVersion" }
+    else { Warn "Claude Code $(if ($claudeVersion) { $claudeVersion } else { 'ukjent versjon' }) er eldre enn $claudeMin og leser kanskje ikke AGENTS.md" "Kjør: claude update" }
+}
 else { Warn "Claude Code mangler. Bruker du en annen harness er det greit" "https://docs.anthropic.com/en/docs/claude-code/quickstart" }
 
 # dotnet-verktøy fra .config/dotnet-tools.json (dotnet-ef til migrasjoner)

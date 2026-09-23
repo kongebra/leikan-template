@@ -75,8 +75,15 @@ else
 fi
 
 # Agent-harness. Claude Code er default i workshopen, men andre er lov
+# 2.1.281 er første versjon som leser AGENTS.md i alle sesjoner, også med telemetri av
+claude_min="2.1.281"
 if command -v claude >/dev/null 2>&1; then
-  ok "Claude Code $(claude --version 2>/dev/null | head -1)"
+  claude_version=$(claude --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+  if [ -n "$claude_version" ] && [ "$(printf '%s\n%s\n' "$claude_min" "$claude_version" | sort -V | head -1)" = "$claude_min" ]; then
+    ok "Claude Code $claude_version"
+  else
+    warn "Claude Code ${claude_version:-ukjent versjon} er eldre enn $claude_min og leser kanskje ikke AGENTS.md" "Kjør: claude update"
+  fi
 else
   warn "Claude Code mangler. Bruker du en annen harness er det greit" "https://docs.anthropic.com/en/docs/claude-code/quickstart"
 fi
