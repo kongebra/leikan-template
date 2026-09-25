@@ -81,116 +81,7 @@ export async function generateMetadata({
   };
 }
 
-// Statusbadge — viser om spillet er ferdig eller pågår
-function StatusBadge({ isDone }: { isDone: boolean }) {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "0.375rem",
-        padding: "0.1875rem 0.625rem",
-        borderRadius: "9999px",
-        fontSize: "0.75rem",
-        fontWeight: 600,
-        letterSpacing: "0.04em",
-        backgroundColor: isDone
-          ? "rgba(61, 158, 110, 0.13)"
-          : "var(--color-accent-subtle)",
-        color: isDone ? "var(--color-success)" : "var(--color-accent)",
-        border: `1px solid ${isDone ? "rgba(61, 158, 110, 0.3)" : "var(--color-accent-glow)"}`,
-      }}
-    >
-      {/* Statusindikator-prikk */}
-      <span
-        aria-hidden="true"
-        style={{
-          width: "0.4375rem",
-          height: "0.4375rem",
-          borderRadius: "50%",
-          backgroundColor: isDone ? "var(--color-success)" : "var(--color-accent)",
-          flexShrink: 0,
-        }}
-      />
-      {isDone ? "Ferdig" : "Pågår"}
-    </span>
-  );
-}
-
-// Spilltypebadge — viser spillkategorien
-function GameTypeBadge({ gameType }: { gameType: string }) {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        padding: "0.1875rem 0.625rem",
-        borderRadius: "9999px",
-        fontSize: "0.75rem",
-        fontWeight: 600,
-        letterSpacing: "0.04em",
-        backgroundColor: "var(--color-bg-overlay)",
-        color: "var(--color-text-secondary)",
-        border: "1px solid var(--color-border)",
-      }}
-    >
-      {gameType}
-    </span>
-  );
-}
-
-// Plasseringsikon — gull, sølv eller bronse med riktige CSS-variabler
-function PlacementIcon({ place }: { place: 1 | 2 | 3 }) {
-  const configs = {
-    1: {
-      label: "Gull — 1. plass",
-      color: "var(--color-gold)",
-      bg: "var(--color-gold-subtle)",
-      border: "var(--color-gold-border)",
-      symbol: "⬡",
-    },
-    2: {
-      label: "Sølv — 2. plass",
-      color: "var(--color-silver)",
-      bg: "var(--color-silver-subtle)",
-      border: "var(--color-silver-border)",
-      symbol: "⬡",
-    },
-    3: {
-      label: "Bronse — 3. plass",
-      color: "var(--color-bronze)",
-      bg: "var(--color-bronze-subtle)",
-      border: "var(--color-bronze-border)",
-      symbol: "⬡",
-    },
-  } as const;
-
-  const cfg = configs[place];
-
-  return (
-    <span
-      aria-label={cfg.label}
-      title={cfg.label}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "2.25rem",
-        height: "2.25rem",
-        borderRadius: "50%",
-        backgroundColor: cfg.bg,
-        border: `1px solid ${cfg.border}`,
-        color: cfg.color,
-        fontSize: "1rem",
-        flexShrink: 0,
-      }}
-    >
-      {cfg.symbol}
-    </span>
-  );
-}
-
-// Én plasseringslinje med ikon og deltakernavn
+// Én plasseringslinje med plassering og deltakernavn
 function PlacementRow({
   place,
   persons,
@@ -207,47 +98,14 @@ function PlacementRow({
   if (persons.length === 0) return null;
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: "1rem",
-        padding: "0.875rem 1.25rem",
-        backgroundColor: "var(--color-bg-elevated)",
-        border: "1px solid var(--color-border)",
-        borderRadius: "0.625rem",
-      }}
-    >
-      <PlacementIcon place={place} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontSize: "0.6875rem",
-            fontWeight: 700,
-            letterSpacing: "0.07em",
-            textTransform: "uppercase",
-            color: "var(--color-text-muted)",
-            marginBottom: "0.25rem",
-          }}
-        >
-          {placeLabels[place]}
+    <div className="border border-gray-200 rounded p-4">
+      <div className="text-sm text-gray-600 mb-1">{placeLabels[place]}</div>
+      {/* Viser alle som deler plassen (ties) på separate linjer */}
+      {persons.map((p) => (
+        <div key={p.id} className="font-semibold">
+          {p.firstName} {p.lastName}
         </div>
-        {/* Viser alle som deler plassen (ties) på separate linjer */}
-        {persons.map((p) => (
-          <div
-            key={p.id}
-            style={{
-              fontSize: "1rem",
-              fontWeight: 700,
-              letterSpacing: "-0.015em",
-              color: "var(--color-text-primary)",
-              lineHeight: 1.35,
-            }}
-          >
-            {p.firstName} {p.lastName}
-          </div>
-        ))}
-      </div>
+      ))}
     </div>
   );
 }
@@ -261,70 +119,16 @@ function PersonList({
   emptyText: string;
 }) {
   if (persons.length === 0) {
-    return (
-      <p
-        style={{
-          fontSize: "0.875rem",
-          color: "var(--color-text-muted)",
-          fontStyle: "italic",
-          padding: "0.75rem 0",
-        }}
-      >
-        {emptyText}
-      </p>
-    );
+    return <p className="text-gray-500">{emptyText}</p>;
   }
 
   return (
-    <ul
-      style={{
-        listStyle: "none",
-        margin: 0,
-        padding: 0,
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.375rem",
-      }}
-    >
-      {persons.map((p, index) => (
+    <ul className="space-y-1">
+      {persons.map((p) => (
         <li
           key={p.id}
-          className="animate-fade-up"
-          style={{
-            animationDelay: `${index * 30}ms`,
-            display: "flex",
-            alignItems: "center",
-            gap: "0.625rem",
-            padding: "0.5rem 0.75rem",
-            borderRadius: "0.375rem",
-            backgroundColor: "var(--color-bg-elevated)",
-            border: "1px solid var(--color-border-subtle)",
-            fontSize: "0.9rem",
-            fontWeight: 500,
-            color: "var(--color-text-primary)",
-          }}
+          className="border border-gray-200 rounded px-3 py-1.5 text-sm"
         >
-          {/* Initialer-avatar */}
-          <span
-            aria-hidden="true"
-            style={{
-              width: "1.75rem",
-              height: "1.75rem",
-              borderRadius: "50%",
-              backgroundColor: "var(--color-bg-overlay)",
-              border: "1px solid var(--color-border)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "0.6875rem",
-              fontWeight: 700,
-              color: "var(--color-text-muted)",
-              flexShrink: 0,
-              letterSpacing: "0.02em",
-            }}
-          >
-            {p.firstName[0]}{p.lastName[0]}
-          </span>
           {p.firstName} {p.lastName}
         </li>
       ))}
@@ -343,43 +147,12 @@ function SectionHeading({
   count?: number;
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.625rem",
-        marginBottom: "0.875rem",
-      }}
-    >
-      <h2
-        id={id}
-        style={{
-          fontSize: "0.8125rem",
-          fontWeight: 700,
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          color: "var(--color-text-muted)",
-        }}
-      >
-        {children}
-      </h2>
-      {/* Antall-pill */}
+    <h2 id={id} className="text-lg font-semibold mb-2">
+      {children}
       {count !== undefined && (
-        <span
-          style={{
-            fontSize: "0.6875rem",
-            fontWeight: 600,
-            color: "var(--color-text-muted)",
-            backgroundColor: "var(--color-bg-overlay)",
-            border: "1px solid var(--color-border-subtle)",
-            borderRadius: "9999px",
-            padding: "0.0625rem 0.4375rem",
-          }}
-        >
-          {count}
-        </span>
+        <span className="text-sm text-gray-600 font-normal"> ({count})</span>
       )}
-    </div>
+    </h2>
   );
 }
 
@@ -420,193 +193,62 @@ export default async function GamePage({
       thirdPlacePersons.length > 0);
 
   return (
-    <div className="container section">
-      {/* Tilbake-lenke til turneringen */}
-      <div className="animate-fade-up" style={{ marginBottom: "2rem" }}>
+    <div className="mx-auto max-w-5xl px-4 py-8">
+      <div className="mb-4">
         <Link
           href={`/tournaments/${slug}`}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.375rem",
-            fontSize: "0.8125rem",
-            color: "var(--color-text-muted)",
-            textDecoration: "none",
-            transition: "color 0.2s var(--ease-out-expo)",
-          }}
-          className="hover:text-[var(--color-text-secondary)]"
+          className="text-sm underline"
         >
-          <span aria-hidden="true">←</span>
           Tilbake til turneringen
         </Link>
       </div>
 
-      {/* Hero-overskrift — spillnavn med badges */}
-      <div className="animate-fade-up" style={{ marginBottom: "3rem" }}>
-        {/* Badges for spilltype og status */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "0.5rem",
-            marginBottom: "0.875rem",
-          }}
-        >
-          <GameTypeBadge gameType={game.gameType} />
-          <StatusBadge isDone={game.isDone} />
-          {/* Arrangørdeltagelsesbadge — kun synlig hvis relevant */}
-          {game.isOrganizersParticipating && (
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                padding: "0.1875rem 0.625rem",
-                borderRadius: "9999px",
-                fontSize: "0.75rem",
-                fontWeight: 600,
-                letterSpacing: "0.04em",
-                backgroundColor: "rgba(58, 123, 213, 0.13)",
-                color: "var(--color-info)",
-                border: "1px solid rgba(58, 123, 213, 0.27)",
-              }}
-            >
-              Arrangør deltar
-            </span>
-          )}
-        </div>
+      <h1 className="text-2xl font-semibold">{game.name}</h1>
 
-        <h1
-          style={{
-            fontSize: "clamp(1.75rem, 5vw, 3rem)",
-            fontWeight: 800,
-            letterSpacing: "-0.04em",
-            color: "var(--color-text-primary)",
-            lineHeight: 1.1,
-            marginBottom: game.description ? "1rem" : "0",
-          }}
-        >
-          {game.name}
-        </h1>
-
-        {/* Valgfri beskrivelse */}
-        {game.description && (
-          <p
-            style={{
-              fontSize: "1rem",
-              color: "var(--color-text-secondary)",
-              lineHeight: 1.65,
-              maxWidth: "44rem",
-              marginTop: "0.625rem",
-            }}
-          >
-            {game.description}
-          </p>
+      <div className="mt-1 mb-6 flex flex-wrap items-center gap-2 text-sm text-gray-600">
+        <span>{game.gameType}</span>
+        <span>·</span>
+        <span>{game.isDone ? "Ferdig" : "Pågår"}</span>
+        {game.isOrganizersParticipating && (
+          <>
+            <span>·</span>
+            <span>Arrangør deltar</span>
+          </>
         )}
-
-        {/* Dekorativ aksent-linje under tittelen */}
-        <div
-          aria-hidden="true"
-          style={{
-            marginTop: "1.25rem",
-            height: "1px",
-            background:
-              "linear-gradient(90deg, var(--color-accent) 0%, var(--color-border) 40%, transparent 100%)",
-            maxWidth: "24rem",
-          }}
-        />
       </div>
 
-      {/* Todelt layout — plasseringer til venstre, deltakerlister til høyre */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 28rem), 1fr))",
-          gap: "2.5rem",
-          alignItems: "start",
-        }}
-      >
+      {/* Valgfri beskrivelse */}
+      {game.description && (
+        <p className="text-gray-600 mb-6">{game.description}</p>
+      )}
+
+      <div className="grid gap-8 md:grid-cols-2">
         {/* Plasseringsseksjon — kun synlig når spillet er ferdig og har resultater */}
         {game.isDone ? (
-          <section
-            className="animate-fade-up"
-            style={{ animationDelay: "60ms" }}
-            aria-labelledby="placements-heading"
-          >
+          <section aria-labelledby="placements-heading">
             <SectionHeading id="placements-heading">Plasseringer</SectionHeading>
 
             {hasResults ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+              <div className="space-y-2">
                 <PlacementRow place={1} persons={firstPlacePersons} />
                 <PlacementRow place={2} persons={secondPlacePersons} />
                 <PlacementRow place={3} persons={thirdPlacePersons} />
               </div>
             ) : (
               /* Tomt plasseringsresultat — spillet er ferdig men ingen registrert */
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "2.5rem 1.5rem",
-                  border: "1px dashed var(--color-border)",
-                  borderRadius: "0.75rem",
-                  color: "var(--color-text-muted)",
-                }}
-              >
-                <div
-                  aria-hidden="true"
-                  style={{ fontSize: "1.75rem", marginBottom: "0.625rem", opacity: 0.35 }}
-                >
-                  ⬡
-                </div>
-                <p
-                  style={{
-                    fontSize: "0.9rem",
-                    fontWeight: 600,
-                    color: "var(--color-text-secondary)",
-                    marginBottom: "0.25rem",
-                  }}
-                >
-                  Ingen plasseringer registrert
-                </p>
-                <p style={{ fontSize: "0.8125rem" }}>
-                  Resultater er ikke lagt inn for dette spillet ennå.
-                </p>
-              </div>
+              <p className="text-gray-500">
+                Ingen plasseringer registrert. Resultater er ikke lagt inn for
+                dette spillet ennå.
+              </p>
             )}
           </section>
         ) : (
-          /* Spillet pågår — vis info-kort i stedet for plasseringer */
-          <section
-            className="animate-fade-up"
-            style={{ animationDelay: "60ms" }}
-            aria-labelledby="status-heading"
-          >
+          /* Spillet pågår — vis info i stedet for plasseringer */
+          <section aria-labelledby="status-heading">
             <SectionHeading id="status-heading">Status</SectionHeading>
-            <div
-              style={{
-                padding: "1.5rem",
-                backgroundColor: "var(--color-accent-subtle)",
-                border: "1px solid var(--color-accent-glow)",
-                borderRadius: "0.75rem",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "0.9375rem",
-                  color: "var(--color-accent)",
-                  fontWeight: 600,
-                  marginBottom: "0.25rem",
-                }}
-              >
-                Spillet pågår
-              </p>
-              <p
-                style={{
-                  fontSize: "0.8125rem",
-                  color: "var(--color-text-secondary)",
-                  lineHeight: 1.55,
-                }}
-              >
+            <div className="border border-gray-200 rounded p-4">
+              <p className="font-medium mb-1">Spillet pågår</p>
+              <p className="text-sm text-gray-600">
                 Plasseringer og poeng registreres når spillet er fullført.
               </p>
             </div>
@@ -614,11 +256,7 @@ export default async function GamePage({
         )}
 
         {/* Deltakerlister — deltakere, arrangører og tilskuere */}
-        <div
-          className="animate-fade-up"
-          style={{ animationDelay: "120ms", display: "flex", flexDirection: "column", gap: "2rem" }}
-        >
-          {/* Deltakere */}
+        <div className="space-y-6">
           <section aria-labelledby="participants-heading">
             <SectionHeading id="participants-heading" count={participantPersons.length}>
               Deltakere
@@ -629,7 +267,6 @@ export default async function GamePage({
             />
           </section>
 
-          {/* Arrangører */}
           <section aria-labelledby="organizers-heading">
             <SectionHeading id="organizers-heading" count={organizerPersons.length}>
               Arrangører

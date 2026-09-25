@@ -104,487 +104,23 @@ export default async function AdminTournamentDetailPage({ params }: Props) {
 
   return (
     <>
-      <style>{`
-        /* ============================================================
-           ADMIN TURNERING DETALJ — poengregler, spilliste og skjemaer
-           ============================================================ */
-
-        /* Tilbake-lenke */
-        .back-link {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--color-text-muted);
-          text-decoration: none;
-          margin-bottom: 1.5rem;
-          transition: color 0.18s var(--ease-out-expo);
-        }
-
-        .back-link:hover {
-          color: var(--color-accent);
-        }
-
-        .tournament-header {
-          margin-bottom: 2rem;
-        }
-
-        .tournament-eyebrow {
-          font-size: 0.75rem;
-          font-weight: 700;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--color-accent);
-          margin-bottom: 0.375rem;
-        }
-
-        .tournament-title {
-          font-size: 1.875rem;
-          font-weight: 800;
-          letter-spacing: -0.04em;
-          color: var(--color-text-primary);
-          line-height: 1.1;
-          margin: 0 0 0.375rem;
-        }
-
-        .tournament-slug {
-          font-size: 0.8125rem;
-          font-family: "Courier New", Courier, monospace;
-          color: var(--color-text-muted);
-          margin: 0;
-        }
-
-        /* Aksent-skillelinje */
-        .section-divider {
-          width: 3rem;
-          height: 2px;
-          background: linear-gradient(
-            90deg,
-            var(--color-accent) 0%,
-            transparent 100%
-          );
-          border: none;
-          margin: 1.25rem 0 2rem;
-        }
-
-        /* ---- Panel — felles stil ---- */
-
-        .admin-panel {
-          background-color: var(--color-bg-elevated);
-          border: 1px solid var(--color-border);
-          border-radius: 0.75rem;
-          padding: 1.5rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .admin-panel-title {
-          font-size: 0.875rem;
-          font-weight: 700;
-          letter-spacing: -0.01em;
-          color: var(--color-text-primary);
-          margin: 0 0 1.25rem;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .admin-panel-title::before {
-          content: "";
-          display: inline-block;
-          width: 0.25rem;
-          height: 1em;
-          background-color: var(--color-accent);
-          border-radius: 2px;
-        }
-
-        /* ---- Poengregler-skjema ---- */
-
-        /* Rutenett for poengregler — 2 kolonner */
-        .point-rules-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-          gap: 1rem;
-          margin-bottom: 1.25rem;
-        }
-
-        .form-field {
-          display: flex;
-          flex-direction: column;
-          gap: 0.375rem;
-        }
-
-        .form-label {
-          font-size: 0.75rem;
-          font-weight: 600;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-          color: var(--color-text-muted);
-        }
-
-        /* Tallinngangsfelt */
-        .form-input-number {
-          height: 2.375rem;
-          padding: 0 0.75rem;
-          background-color: var(--color-bg-base);
-          border: 1px solid var(--color-border);
-          border-radius: 0.5rem;
-          color: var(--color-text-primary);
-          font-size: 0.875rem;
-          font-family: var(--font-sans);
-          outline: none;
-          transition:
-            border-color 0.18s var(--ease-out-expo),
-            box-shadow 0.18s var(--ease-out-expo);
-          width: 100%;
-        }
-
-        .form-input-number:focus {
-          border-color: var(--color-accent);
-          box-shadow: 0 0 0 3px var(--color-accent-glow);
-        }
-
-        /* Tekstinngangsfelt */
-        .form-input {
-          height: 2.375rem;
-          padding: 0 0.75rem;
-          background-color: var(--color-bg-base);
-          border: 1px solid var(--color-border);
-          border-radius: 0.5rem;
-          color: var(--color-text-primary);
-          font-size: 0.875rem;
-          font-family: var(--font-sans);
-          outline: none;
-          transition:
-            border-color 0.18s var(--ease-out-expo),
-            box-shadow 0.18s var(--ease-out-expo);
-          width: 100%;
-        }
-
-        .form-input::placeholder {
-          color: var(--color-text-muted);
-        }
-
-        .form-input:focus {
-          border-color: var(--color-accent);
-          box-shadow: 0 0 0 3px var(--color-accent-glow);
-        }
-
-        /* Nedtrekksmeny */
-        .form-select {
-          height: 2.375rem;
-          padding: 0 0.75rem;
-          background-color: var(--color-bg-base);
-          border: 1px solid var(--color-border);
-          border-radius: 0.5rem;
-          color: var(--color-text-primary);
-          font-size: 0.875rem;
-          font-family: var(--font-sans);
-          outline: none;
-          cursor: pointer;
-          transition:
-            border-color 0.18s var(--ease-out-expo),
-            box-shadow 0.18s var(--ease-out-expo);
-          width: 100%;
-          appearance: none;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%234d5268' stroke-width='1.25' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-          background-position: right 0.75rem center;
-          padding-right: 2.25rem;
-        }
-
-        .form-select:focus {
-          border-color: var(--color-accent);
-          box-shadow: 0 0 0 3px var(--color-accent-glow);
-        }
-
-        /* Avkrysningsboks-rad */
-        .form-checkbox-row {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.625rem 0;
-        }
-
-        .form-checkbox {
-          width: 1rem;
-          height: 1rem;
-          accent-color: var(--color-accent);
-          cursor: pointer;
-          flex-shrink: 0;
-        }
-
-        .form-checkbox-label {
-          font-size: 0.875rem;
-          color: var(--color-text-secondary);
-          cursor: pointer;
-        }
-
-        /* Primærknapp */
-        .btn-primary {
-          height: 2.375rem;
-          padding: 0 1.125rem;
-          background-color: var(--color-accent);
-          color: var(--color-on-accent);
-          font-size: 0.875rem;
-          font-weight: 700;
-          font-family: var(--font-sans);
-          letter-spacing: -0.01em;
-          border: none;
-          border-radius: 0.5rem;
-          cursor: pointer;
-          transition:
-            opacity 0.18s var(--ease-out-expo),
-            transform 0.18s var(--ease-out-expo);
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-        }
-
-        .btn-primary:hover {
-          opacity: 0.88;
-          transform: translateY(-1px);
-        }
-
-        .btn-primary:active {
-          transform: translateY(0);
-        }
-
-        /* ---- Opprett-spill-skjema ---- */
-
-        .create-game-form {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.75rem;
-          align-items: flex-end;
-        }
-
-        .create-game-field {
-          display: flex;
-          flex-direction: column;
-          gap: 0.375rem;
-          flex: 1 1 180px;
-        }
-
-        /* ---- Spilliste ---- */
-
-        .games-list {
-          display: flex;
-          flex-direction: column;
-          gap: 0;
-        }
-
-        /* Spillrad */
-        .game-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 1rem;
-          padding: 0.875rem 1.25rem;
-          border-bottom: 1px solid var(--color-border-subtle);
-          transition: background-color 0.15s var(--ease-out-expo);
-        }
-
-        .game-row:last-child {
-          border-bottom: none;
-        }
-
-        .game-row:hover {
-          background-color: var(--color-bg-overlay);
-        }
-
-        .game-row-left {
-          display: flex;
-          align-items: center;
-          gap: 0.875rem;
-          min-width: 0;
-        }
-
-        /* Statusindikator — grønn for ferdig, gul for aktiv */
-        .game-status-dot {
-          width: 0.5rem;
-          height: 0.5rem;
-          border-radius: 50%;
-          flex-shrink: 0;
-        }
-
-        .game-status-dot--done {
-          background-color: var(--color-success);
-        }
-
-        .game-status-dot--active {
-          background-color: var(--color-accent);
-        }
-
-        .game-name {
-          font-size: 0.9375rem;
-          font-weight: 600;
-          letter-spacing: -0.01em;
-          color: var(--color-text-primary);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .game-type-badge {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          padding: 0.125rem 0.45rem;
-          border-radius: 9999px;
-          background-color: var(--color-bg-overlay);
-          color: var(--color-text-muted);
-          border: 1px solid var(--color-border-subtle);
-          white-space: nowrap;
-          flex-shrink: 0;
-        }
-
-        /* Ferdig-badge */
-        .game-done-badge {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          padding: 0.125rem 0.45rem;
-          border-radius: 9999px;
-          background-color: var(--color-success-subtle);
-          color: var(--color-success);
-          border: 1px solid var(--color-success-border);
-          white-space: nowrap;
-          flex-shrink: 0;
-        }
-
-        /* Åpne-lenke for spill */
-        .btn-open-game {
-          height: 2rem;
-          padding: 0 0.75rem;
-          background: transparent;
-          border: 1px solid var(--color-border-subtle);
-          border-radius: 0.4rem;
-          color: var(--color-text-muted);
-          font-size: 0.8125rem;
-          font-weight: 500;
-          font-family: var(--font-sans);
-          cursor: pointer;
-          text-decoration: none;
-          transition:
-            color 0.18s var(--ease-out-expo),
-            background-color 0.18s var(--ease-out-expo),
-            border-color 0.18s var(--ease-out-expo);
-          display: inline-flex;
-          align-items: center;
-          gap: 0.35rem;
-          flex-shrink: 0;
-        }
-
-        .btn-open-game:hover {
-          color: var(--color-accent);
-          background-color: var(--color-accent-subtle);
-          border-color: var(--color-accent-glow);
-        }
-
-        /* Tabelloverskrift */
-        .table-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 1rem 1.25rem;
-          border-bottom: 1px solid var(--color-border-subtle);
-        }
-
-        .table-header-title {
-          font-size: 0.875rem;
-          font-weight: 700;
-          color: var(--color-text-primary);
-          letter-spacing: -0.01em;
-          margin: 0;
-        }
-
-        .table-count-badge {
-          font-size: 0.75rem;
-          font-weight: 600;
-          padding: 0.125rem 0.5rem;
-          border-radius: 9999px;
-          background-color: var(--color-accent-subtle);
-          color: var(--color-accent);
-          border: 1px solid var(--color-accent-glow);
-        }
-
-        /* Tom-tilstand */
-        .empty-state {
-          padding: 3rem 2rem;
-          text-align: center;
-          color: var(--color-text-muted);
-        }
-
-        .empty-state-icon {
-          font-size: 1.75rem;
-          margin-bottom: 0.75rem;
-          opacity: 0.35;
-        }
-
-        .empty-state-title {
-          font-size: 0.9375rem;
-          font-weight: 600;
-          color: var(--color-text-secondary);
-          margin: 0 0 0.25rem;
-        }
-
-        .empty-state-desc {
-          font-size: 0.875rem;
-          margin: 0;
-        }
-
-        /* ---- Seksjonsoverskrift ---- */
-
-        .section-heading {
-          font-size: 1.125rem;
-          font-weight: 700;
-          letter-spacing: -0.03em;
-          color: var(--color-text-primary);
-          margin: 0 0 1rem;
-        }
-
-        .games-section {
-          background-color: var(--color-bg-elevated);
-          border: 1px solid var(--color-border);
-          border-radius: 0.75rem;
-          overflow: hidden;
-          margin-bottom: 1.5rem;
-        }
-      `}</style>
-
       {/* Tilbake-lenke til turneringsliste */}
-      <Link href="/admin/tournaments" className="back-link">
-        {/* Pil-venstre-ikon */}
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 14 14"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-          <path
-            d="M11 7H3M3 7L6.5 3.5M3 7L6.5 10.5"
-            stroke="currentColor"
-            strokeWidth="1.25"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+      <Link href="/admin/tournaments" className="text-sm underline mb-6 inline-block">
         Alle turneringer
       </Link>
 
       {/* Sideoverskrift */}
-      <header className="tournament-header">
-        <p className="tournament-eyebrow">Turnering</p>
-        <h1 className="tournament-title">{tournament.name}</h1>
-        <p className="tournament-slug">/{tournament.slug}</p>
+      <header className="mb-6">
+        <h1 className="text-2xl font-semibold mb-1">{tournament.name}</h1>
+        <p className="text-sm text-gray-500">/{tournament.slug}</p>
       </header>
 
-      <hr className="section-divider" />
-
       {/* ---- Poengregler ---- */}
-      <section className="admin-panel" aria-labelledby="point-rules-title">
-        <h2 className="admin-panel-title" id="point-rules-title">
+      <section
+        className="border border-gray-200 rounded p-4 mb-6"
+        aria-labelledby="point-rules-title"
+      >
+        <h2 className="text-lg font-semibold mb-4" id="point-rules-title">
           Poengregler
         </h2>
 
@@ -593,9 +129,9 @@ export default async function AdminTournamentDetailPage({ params }: Props) {
           Se domenelogikk i CLAUDE.md for detaljer om beregningsregler.
         */}
         <form action={updateRules}>
-          <div className="point-rules-grid">
-            <div className="form-field">
-              <label htmlFor="participation" className="form-label">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label htmlFor="participation" className="block text-sm font-medium mb-1">
                 Deltaker
               </label>
               <input
@@ -605,12 +141,12 @@ export default async function AdminTournamentDetailPage({ params }: Props) {
                 min="0"
                 defaultValue={tournament.pointRules.participation}
                 required
-                className="form-input-number"
+                className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
               />
             </div>
 
-            <div className="form-field">
-              <label htmlFor="firstPlace" className="form-label">
+            <div>
+              <label htmlFor="firstPlace" className="block text-sm font-medium mb-1">
                 1. plass (additivt)
               </label>
               <input
@@ -620,12 +156,12 @@ export default async function AdminTournamentDetailPage({ params }: Props) {
                 min="0"
                 defaultValue={tournament.pointRules.firstPlace}
                 required
-                className="form-input-number"
+                className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
               />
             </div>
 
-            <div className="form-field">
-              <label htmlFor="secondPlace" className="form-label">
+            <div>
+              <label htmlFor="secondPlace" className="block text-sm font-medium mb-1">
                 2. plass (additivt)
               </label>
               <input
@@ -635,12 +171,12 @@ export default async function AdminTournamentDetailPage({ params }: Props) {
                 min="0"
                 defaultValue={tournament.pointRules.secondPlace}
                 required
-                className="form-input-number"
+                className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
               />
             </div>
 
-            <div className="form-field">
-              <label htmlFor="thirdPlace" className="form-label">
+            <div>
+              <label htmlFor="thirdPlace" className="block text-sm font-medium mb-1">
                 3. plass (additivt)
               </label>
               <input
@@ -650,14 +186,14 @@ export default async function AdminTournamentDetailPage({ params }: Props) {
                 min="0"
                 defaultValue={tournament.pointRules.thirdPlace}
                 required
-                className="form-input-number"
+                className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
               />
             </div>
 
-            <div className="form-field">
+            <div>
               <label
                 htmlFor="organizedWithParticipation"
-                className="form-label"
+                className="block text-sm font-medium mb-1"
               >
                 Arrangør m/ deltakelse
               </label>
@@ -670,14 +206,14 @@ export default async function AdminTournamentDetailPage({ params }: Props) {
                   tournament.pointRules.organizedWithParticipation
                 }
                 required
-                className="form-input-number"
+                className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
               />
             </div>
 
-            <div className="form-field">
+            <div>
               <label
                 htmlFor="organizedWithoutParticipation"
-                className="form-label"
+                className="block text-sm font-medium mb-1"
               >
                 Arrangør u/ deltakelse
               </label>
@@ -690,12 +226,12 @@ export default async function AdminTournamentDetailPage({ params }: Props) {
                   tournament.pointRules.organizedWithoutParticipation
                 }
                 required
-                className="form-input-number"
+                className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
               />
             </div>
 
-            <div className="form-field">
-              <label htmlFor="spectator" className="form-label">
+            <div>
+              <label htmlFor="spectator" className="block text-sm font-medium mb-1">
                 Tilskuer
               </label>
               <input
@@ -705,43 +241,32 @@ export default async function AdminTournamentDetailPage({ params }: Props) {
                 min="0"
                 defaultValue={tournament.pointRules.spectator}
                 required
-                className="form-input-number"
+                className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
               />
             </div>
           </div>
 
-          <button type="submit" className="btn-primary">
-            {/* Lagre-ikon */}
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path
-                d="M2 12H12M7 2V9M7 9L4.5 6.5M7 9L9.5 6.5"
-                stroke="currentColor"
-                strokeWidth="1.25"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+          <button
+            type="submit"
+            className="rounded bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+          >
             Lagre poengregler
           </button>
         </form>
       </section>
 
       {/* ---- Opprett spill ---- */}
-      <section className="admin-panel" aria-labelledby="create-game-title">
-        <h2 className="admin-panel-title" id="create-game-title">
+      <section
+        className="border border-gray-200 rounded p-4 mb-6"
+        aria-labelledby="create-game-title"
+      >
+        <h2 className="text-lg font-semibold mb-4" id="create-game-title">
           Legg til nytt spill
         </h2>
 
-        <form action={createGame} className="create-game-form">
-          <div className="create-game-field">
-            <label htmlFor="gameName" className="form-label">
+        <form action={createGame} className="flex flex-wrap gap-3 items-end">
+          <div className="flex-1 min-w-[180px]">
+            <label htmlFor="gameName" className="block text-sm font-medium mb-1">
               Navn
             </label>
             <input
@@ -750,78 +275,54 @@ export default async function AdminTournamentDetailPage({ params }: Props) {
               type="text"
               required
               placeholder="Bowling"
-              className="form-input"
+              className="h-9 w-full rounded border border-gray-300 px-2 text-sm"
             />
           </div>
 
-          <div className="create-game-field">
-            <label htmlFor="gameType" className="form-label">
+          <div className="flex-1 min-w-[180px]">
+            <label htmlFor="gameType" className="block text-sm font-medium mb-1">
               Spilltype
             </label>
-            <select id="gameType" name="gameType" className="form-select">
+            <select
+              id="gameType"
+              name="gameType"
+              className="h-9 w-full rounded border border-gray-300 px-2 text-sm"
+            >
               <option value="Standard">Standard</option>
               <option value="Simracing">Simracing</option>
             </select>
           </div>
 
-          <div
-            className="create-game-field"
-            style={{ justifyContent: "flex-end" }}
-          >
-            <div className="form-checkbox-row">
-              <input
-                id="isOrganizersParticipating"
-                name="isOrganizersParticipating"
-                type="checkbox"
-                className="form-checkbox"
-              />
-              <label
-                htmlFor="isOrganizersParticipating"
-                className="form-checkbox-label"
-              >
-                Arrangørene deltar
-              </label>
-            </div>
+          <div className="flex h-9 items-center gap-2">
+            <input
+              id="isOrganizersParticipating"
+              name="isOrganizersParticipating"
+              type="checkbox"
+              className="h-4 w-4"
+            />
+            <label htmlFor="isOrganizersParticipating" className="text-sm">
+              Arrangørene deltar
+            </label>
           </div>
 
           <button
             type="submit"
-            className="btn-primary"
-            style={{ alignSelf: "flex-end" }}
+            className="h-9 rounded bg-gray-900 px-3 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
           >
-            {/* Pluss-ikon */}
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path
-                d="M7 2V12M2 7H12"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
             Opprett spill
           </button>
         </form>
       </section>
 
       {/* ---- Spilliste ---- */}
-      <section
-        className="games-section"
-        aria-labelledby="games-list-title"
-      >
+      <section className="border border-gray-200 rounded" aria-labelledby="games-list-title">
         {/* Listeoverskrift med teller */}
-        <div className="table-header">
-          <h2 className="table-header-title" id="games-list-title">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold" id="games-list-title">
             Spill i denne turneringen
           </h2>
           {sortedGames.length > 0 && (
-            <span className="table-count-badge" aria-live="polite">
+            <span className="text-sm text-gray-500" aria-live="polite">
               {sortedGames.length}{" "}
               {sortedGames.length === 1 ? "spill" : "spill"}
             </span>
@@ -830,58 +331,34 @@ export default async function AdminTournamentDetailPage({ params }: Props) {
 
         {sortedGames.length === 0 ? (
           /* Tom-tilstand — ingen spill ennå */
-          <div className="empty-state">
-            <div className="empty-state-icon" aria-hidden="true">
-              ◇
-            </div>
-            <p className="empty-state-title">Ingen spill ennå</p>
-            <p className="empty-state-desc">
-              Bruk skjemaet ovenfor til å legge til det første spillet.
+          <div className="p-4">
+            <p className="text-gray-500">
+              Ingen spill ennå. Bruk skjemaet ovenfor til å legge til det
+              første spillet.
             </p>
           </div>
         ) : (
-          <div className="games-list">
+          <div>
             {sortedGames.map((game) => (
-              <div key={game.id} className="game-row">
-                <div className="game-row-left">
-                  {/* Statusindikator — grønn for ferdig, gul for pågående */}
-                  <span
-                    className={`game-status-dot ${
-                      game.isDone
-                        ? "game-status-dot--done"
-                        : "game-status-dot--active"
-                    }`}
-                    aria-hidden="true"
-                  />
-                  <span className="game-name">{game.name}</span>
-                  <span className="game-type-badge">{game.gameType}</span>
+              <div
+                key={game.id}
+                className="flex items-center justify-between gap-4 p-4 border-b border-gray-200 last:border-b-0"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-sm font-medium">{game.name}</span>
+                  <span className="text-sm text-gray-500">
+                    {game.gameType}
+                  </span>
                   {game.isDone && (
-                    <span className="game-done-badge">Ferdig</span>
+                    <span className="text-sm text-green-700">Ferdig</span>
                   )}
                 </div>
 
                 {/* Lenke til spillets detaljside */}
                 <Link
                   href={`/admin/tournaments/${tournament.slug}/games/${game.id}`}
-                  className="btn-open-game"
+                  className="underline text-sm"
                 >
-                  {/* Pil-ikon */}
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 13 13"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M2.5 6.5H10.5M10.5 6.5L7 3M10.5 6.5L7 10"
-                      stroke="currentColor"
-                      strokeWidth="1.25"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
                   Åpne
                 </Link>
               </div>
