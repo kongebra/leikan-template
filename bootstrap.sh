@@ -88,15 +88,6 @@ else
   warn "Claude Code mangler. Bruker du en annen harness er det greit" "https://code.claude.com/docs/en/quickstart"
 fi
 
-# Sandkassen i Claude Code (/sandbox) trenger bubblewrap og socat på Linux og WSL2. macOS har det innebygd
-if [ "$(uname -s)" = "Linux" ]; then
-  if command -v bwrap >/dev/null 2>&1 && command -v socat >/dev/null 2>&1; then
-    ok "bubblewrap og socat (for /sandbox)"
-  else
-    warn "bubblewrap eller socat mangler. Trengs for /sandbox i Claude Code" "Kjør: sudo apt install bubblewrap socat"
-  fi
-fi
-
 # dotnet-verktøy fra .config/dotnet-tools.json (dotnet-ef til migrasjoner)
 if command -v dotnet >/dev/null 2>&1; then
   if dotnet tool restore >/dev/null 2>&1; then

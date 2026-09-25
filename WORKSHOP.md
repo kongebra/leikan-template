@@ -47,7 +47,6 @@ Vi bruker ikke workshoptid på oppstartsfeil.
 - GitHub CLI, innlogget med `gh auth login`. Brukes til issues og PR-er.
 - Aspire MCP, så agenten kan lese logger og ressursstatus selv. Sjekk med `claude mcp list`.
 - Playwright MCP med `npx playwright install chromium`, så agenten kan bevise ting i nettleseren.
-- På Linux og WSL2: `bubblewrap` og `socat`, så du kan prøve sandkassen i Claude Code. macOS har den innebygd. Windows uten WSL2 har den ikke.
 
 **Ta med**
 
@@ -277,7 +276,7 @@ En instruks i `AGENTS.md` er noe agenten bør gjøre. En hook er noe den ikke ka
 - Trigg hooken med vilje. En hook som aldri har fyrt, er bare en hypotese.
 - Klassikere: blokker endringer i testfiler, eller la en Stop-hook kjøre testene før agenten sier at den er ferdig.
 - Legg inn en deny-regel som nekter agenten å lese secrets. I Leikan ligger de ikke i `.env`, men i `src/TronderLeikan.AppHost/zitadel-bootstrap/` og i user secrets under hjemmemappen (`~/.microsoft/usersecrets/`, på Windows `%APPDATA%\Microsoft\UserSecrets`). Be agenten lese `admin.pat` først, legg inn regelen, og prøv igjen.
-- En `Read`-deny stopper ikke `grep -r` i Bash. Det gjør sandkassen. Slå den på med `/sandbox` på macOS, Linux og WSL2. På Windows uten WSL2 finnes den ikke, så se på sammen med en nabo.
+- En `Read`-deny stopper ikke `grep -r` i Bash. Det gjør bare en sandkasse, altså et miljø der agenten ikke når filene i det hele tatt. Harnessene har ulike løsninger, og kunder kan ha egne krav, for eksempel devcontainers. Hva ville kunden din krevd?
 - Tekst fra web, issues og PR-er kan inneholde instrukser. Prompt injection er ikke løst, så tillatelsene dine er grensen.
 - Vi ser på et forslag til felles standard for teamet i plenum. Hva ville du lagt i din egen `~/.claude/settings.json`?
 
