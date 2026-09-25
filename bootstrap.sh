@@ -71,7 +71,7 @@ fi
 if command -v aspire >/dev/null 2>&1; then
   ok "Aspire CLI $(aspire --version 2>/dev/null | head -1 | cut -d'+' -f1)"
 else
-  warn "Aspire CLI mangler (valgfritt)" "https://aspire.dev/get-started/install-cli/"
+  warn "Aspire CLI mangler (valgfritt, men trengs for Aspire MCP)" "https://aspire.dev/get-started/install-cli/"
 fi
 
 # Agent-harness. Claude Code er default i workshopen, men andre er lov
@@ -85,7 +85,16 @@ if command -v claude >/dev/null 2>&1; then
     warn "Claude Code ${claude_version:-ukjent versjon} er eldre enn $claude_min og leser kanskje ikke AGENTS.md" "Kjør: claude update"
   fi
 else
-  warn "Claude Code mangler. Bruker du en annen harness er det greit" "https://docs.anthropic.com/en/docs/claude-code/quickstart"
+  warn "Claude Code mangler. Bruker du en annen harness er det greit" "https://code.claude.com/docs/en/quickstart"
+fi
+
+# Sandkassen i Claude Code (/sandbox) trenger bubblewrap og socat på Linux og WSL2. macOS har det innebygd
+if [ "$(uname -s)" = "Linux" ]; then
+  if command -v bwrap >/dev/null 2>&1 && command -v socat >/dev/null 2>&1; then
+    ok "bubblewrap og socat (for /sandbox)"
+  else
+    warn "bubblewrap eller socat mangler. Trengs for /sandbox i Claude Code" "Kjør: sudo apt install bubblewrap socat"
+  fi
 fi
 
 # dotnet-verktøy fra .config/dotnet-tools.json (dotnet-ef til migrasjoner)

@@ -35,6 +35,7 @@ Domenet er beskrevet i [docs/TRONDER_LEIKAN.md](docs/TRONDER_LEIKAN.md).
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (PostgreSQL og Zitadel kjører i containere)
 - [Node.js 24 eller nyere](https://nodejs.org/en/download) med npm (frontend)
 - [Git](https://git-scm.com/downloads)
+- [PowerShell 7 eller nyere](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows) på Windows. Windows PowerShell 5.1, som følger med Windows, holder ikke. Installer med `winget install --id Microsoft.PowerShell --source winget`
 - [GitHub CLI](https://cli.github.com/) er anbefalt til issues og PR-er, men GitHub MCP eller nettleseren fungerer også
 
 Aspire trenger ingen workload; AppHost bruker `Aspire.AppHost.Sdk` fra NuGet.
@@ -48,7 +49,7 @@ pwsh -ExecutionPolicy Bypass -File .\bootstrap.ps1  # Windows (PowerShell 7)
 ```
 
 Scriptet installerer ingenting utover `dotnet ef` fra `.config/dotnet-tools.json`, men sier tydelig hva som mangler og hvor du finner det.
-Windows-scriptet krever [PowerShell 7](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows).
+Windows-scriptet krever [PowerShell 7 eller nyere](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows).
 `-ExecutionPolicy Bypass` trengs fordi Windows som standard nekter å kjøre script lastet ned fra nettet.
 
 På Windows: klon til en kort sti, for eksempel `C:\src\`, og bruk gjerne Windows Terminal.
@@ -116,7 +117,7 @@ Det fjerner postgres-containeren, Aspire-nettverket, datavolumet `leikan-postgre
 
 ```bash
 ./reset-local.sh      # macOS / Linux
-.\reset-local.ps1     # Windows
+pwsh -ExecutionPolicy Bypass -File .\reset-local.ps1  # Windows (PowerShell 7)
 ```
 
 ### Feilsøking

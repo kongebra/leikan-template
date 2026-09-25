@@ -27,18 +27,27 @@ Vi bruker ikke workshoptid på oppstartsfeil.
    git commit -m "Oppdater workshopmateriell fra templaten"
    ```
 
-3. Kjør `./bootstrap.sh` (macOS/Linux) eller `pwsh -ExecutionPolicy Bypass -File .\bootstrap.ps1` (Windows, PowerShell 7). Alt påkrevd skal være grønt.
+3. Kjør `./bootstrap.sh` (macOS/Linux) eller `pwsh -ExecutionPolicy Bypass -File .\bootstrap.ps1` (Windows). Alt påkrevd skal være grønt.
+   Windows-scriptet krever PowerShell 7 eller nyere. Windows PowerShell 5.1, som følger med Windows, holder ikke.
+   Sier Windows at `pwsh` ikke finnes, installer det og åpne en ny terminal:
+
+   ```
+   winget install --id Microsoft.PowerShell --source winget
+   ```
+
 4. Kjør `dotnet run --project src/TronderLeikan.AppHost`. Første gang tar 2-5 minutter.
 5. Åpne Aspire-dashboardet fra lenken i terminalen. Alle ressurser skal bli grønne.
 6. Klikk på lenken til `frontend`. Du skal se to turneringer med scoreboard.
 7. Legg til `/admin` på samme adresse, logg inn med `zitadel-admin@zitadel.localhost` og `Password1!`.
-8. Harnessen din er installert og innlogget. Fasilitator kjører Claude Code, men alle harnesser kan brukes, se «Andre harnesser» bakerst. Bruker du Claude Code, skal `claude --version` vise 2.1.281 eller nyere. Start og avslutt én sesjon etter oppgraderingen, før workshopen.
+8. Du har lisens. De fleste har Claude Code via Enterprise og GitHub Copilot via Enterprise. Mangler du lisens, si fra i Slack-tråden før helgen.
+9. Harnessen din er installert og innlogget. Fasilitator kjører Claude Code, men alle harnesser kan brukes, se «Andre harnesser» bakerst. Bruker du Claude Code, skal `claude --version` vise 2.1.281 eller nyere. Start og avslutt én sesjon etter oppgraderingen, før workshopen.
 
 **Anbefalt**
 
 - GitHub CLI, innlogget med `gh auth login`. Brukes til issues og PR-er.
 - Aspire MCP, så agenten kan lese logger og ressursstatus selv. Sjekk med `claude mcp list`.
 - Playwright MCP med `npx playwright install chromium`, så agenten kan bevise ting i nettleseren.
+- På Linux og WSL2: `bubblewrap` og `socat`, så du kan prøve sandkassen i Claude Code. macOS har den innebygd. Windows uten WSL2 har den ikke.
 
 **Ta med**
 
@@ -55,10 +64,14 @@ Navnet er ikke nødvendigvis en fil du skal lage.
 |---|---|
 | `AGENTS.md` | Instruksene agenten får hver gang |
 | `PLAN.md` | Å planlegge og utføre en oppgave med en agent |
-| `hooks.json` | Tester, bevis og regler agenten ikke kan bryte |
-| `SUBAGENTS.md` | Å delegere og jobbe parallelt |
 | `SKILL.md` | Å gjøre gjentakelser om til noe gjenbrukbart |
-| `REVIEW.md` | Review og sikkerhet |
+| `hooks.json` | Det som aldri skal skje: hooks, deny-regler og sandkasse |
+| `SUBAGENTS.md` | Å delegere, og review før PR |
+| `SUMMARY.md` | Å bruke alt, og oppsummere |
+
+Dag 1 er mest mulig hands-on.
+Bruk agenten til alt, og start en fersk økt per oppgave.
+Dag 2 starter med `/insights`, som leser øktene dine fra dag 1.
 
 I `PLAN.md` velger du én story, og den tar du med deg videre.
 Ingen feiler workshopen fordi storyen ikke ble ferdig.
@@ -68,8 +81,8 @@ Det som ikke gikk, er også læring.
 
 1. Hva som hører hjemme i `AGENTS.md`.
 2. Når en `SKILL.md` lønner seg.
-3. Hvordan hooks stopper det som aldri skal skje.
-4. Erfaring med subagenter, både i naturlig språk og definert.
+3. Hvordan hooks og sandkasse stopper det som aldri skal skje.
+4. Erfaring med review med subagent før PR.
 5. Kunnskap til å foreslå et oppsett hos kunden din.
 
 ## Slik leser du en modul
@@ -93,7 +106,8 @@ Tolk, utforsk koden og gi agenten kontekst, gjerne sammen med andre.
 
 **Start**
 
-Start en fersk sesjon uten `AGENTS.md`.
+Start en fersk sesjon.
+Repoet har ingen `AGENTS.md` i rota ennå, bare en i `src/frontend` som lastes når agenten leser filer der.
 Spør hvordan appen kjøres og testes.
 Noter alt agenten bommer på eller må lete lenge etter.
 
@@ -115,7 +129,7 @@ Når konteksten er forgiftet, gjentar agenten feil du har rettet, følger noe du
 Bruk `/clear` for en ny oppgave eller en forgiftet kontekst.
 Bruk `/compact` når du fortsatt jobber med samme oppgave, men konteksten er full.
 
-Noter prompter du skriver flere ganger underveis i workshopen. Du trenger dem i `SKILL.md`.
+Noter prompter du skriver flere ganger. Du trenger dem i `SKILL.md` i ettermiddag.
 
 Ferdig tidlig:
 
@@ -141,7 +155,7 @@ Ferdig tidlig:
 Velg en story fra [docs/backlog.md](docs/backlog.md). Den tar du med deg resten av workshopen.
 Skriv en brief på tre linjer: hva som skal være sant etterpå, hva som ikke skal røres (hvis du vet det, ellers finner du det ut underveis), og hvordan vi vet at det virker.
 Start en fersk sesjon og gå i plan mode: skriv `/plan` foran briefen, eller trykk `Shift+Tab` til statuslinja viser plan mode.
-På Pro, Max og Team starter Claude Code i auto, og da må du trykke `Shift+Tab` tre ganger.
+Med Enterprise starter Claude Code i Manual, og da trykker du `Shift+Tab` to ganger. På Pro, Max og Team starter den i auto, og da trykker du tre ganger. Statuslinja viser hvor du er.
 Ikke godkjenn planen før du faktisk er enig i den.
 
 Start så en ny fersk sesjon på samme story.
@@ -153,6 +167,7 @@ Legg de to planene side om side, velg den beste, og bygg videre på den.
 - La agenten utforske koden før den planlegger. Hva fant den som du ikke visste?
 - Kjør `/context` etter utforskningen. Hvor mye kostet det å lese seg opp?
 - Hva måtte du forklare agenten som den burde visst om repoet? Legg det inn i `AGENTS.md`.
+- Agenten skal bevise at det virker. Test først, rød før grønn, og agenten endrer ikke testen for å bestå. Bevis mot kjørende system, med Playwright eller kall mot API-et. Grønne tester er ikke nok.
 
 Ferdig tidlig:
 
@@ -167,104 +182,20 @@ Ferdig tidlig:
 2. Hva måtte du forklare som agenten burde visst?
 3. Hva fant grillingen som briefen din manglet?
 
-### `hooks.json`
-
-**Mål:** agenten beviser at arbeidet virker, og du har minst én regel den ikke kan bryte.
-
-**Start**
-
-Skriv en test for kjerneregelen i storyen din.
-Den skal være rød før agenten implementerer.
-Agenten skal ikke endre testen for å få den grønn.
-
-**Utforsk**
-
-- Bevis mot kjørende system, med Playwright eller kall mot API-et. Grønne tester er ikke nok.
-- Lag en hook. Den kan være personlig og gjelde alle prosjektene dine, eller høre til dette repoet. Hva i jobben din burde vært en hook og ikke en instruks?
-- Trigg hooken med vilje. En hook som aldri har fyrt, er bare en hypotese.
-
-Hvor hører en feil agenten gjorde hjemme?
-
-| Agenten gjorde feil | Løs det med |
-|---|---|
-| Den visste det ikke | regel i `AGENTS.md` |
-| Det kan sjekkes | test |
-| Det må aldri skje | hook |
-| Det gjentar seg | skill |
-| Det er mekanisk | script |
-
-Ferdig tidlig:
-
-- Lag en hook til, av en annen type enn den første.
-- Del hooken din med en som jobber annerledes enn deg. Passer den for dem?
-
-**Ferdig når:** minst én test var rød før den ble grønn, beviset er klart for PR-en, og hooken er trigget med vilje.
-
-**Recap:**
-
-1. Hva fant testen eller beviset som du ellers ville sendt videre?
-2. Når prøvde agenten å jukse seg forbi?
-3. Hva i jobben din burde vært en hook og ikke en instruks?
-
-### Før du går
-
-Ingen lekser. Hvil hodet.
-I morgen starter vi med å se om `AGENTS.md`-en din holder.
-
-## Dag 2
-
-### Holder `AGENTS.md`-en din?
-
-Start en fersk sesjon.
-Ta neste steg i storyen din, uten hjelp.
-Klarer agenten seg med det du skrev i går?
-
-### `SUBAGENTS.md`
-
-**Mål:** du delegerer til subagenter på to måter, og du jobber parallelt i en worktree.
-
-**Start**
-
-Be hovedagenten starte en subagent som reviewer storyen din i fersk kontekst.
-Skriv hand-offen selv: målet, hvilke filer den skal se på, hva som allerede er bestemt, og nøyaktig hva du vil ha tilbake.
-Subagenten vet ingenting om samtalen din.
-Claude Code kan også velge en fork, som arver hele samtalen og hovedmodellen. Skriv «ikke fork, bruk en fersk subagent» i hand-offen.
-
-**Utforsk**
-
-- Kjør `/context` før og etter at du delegerer en utforskning. Hva ble igjen i hovedsesjonen?
-- La subagenter kjøre på en mindre og raskere modell. Legg regelen i din personlige instruksfil.
-- Lag en definert subagent i `.claude/agents/`. Start gjerne fra en samling, men les den før du bruker den: [VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents), [hesreallyhim/awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code), [github/awesome-copilot](https://github.com/github/awesome-copilot) eller [VoltAgent/awesome-codex-subagents](https://github.com/VoltAgent/awesome-codex-subagents).
-- Følg opp ett funn fra reviewen i en worktree, i en egen sesjon, mens hovedsesjonen jobber videre med storyen. Merge tilbake når det er ferdig.
-
-AppHost kjører bare fra hovedklonen, se [README.md](README.md#feilsøking).
-Kjør bare tester i worktreen.
-
-Ferdig tidlig:
-
-- La en definert subagent med `isolation: worktree` gjøre oppfølgingen. Commit først og sett `"worktree": { "baseRef": "head" }` i `.claude/settings.local.json`, ellers starter den fra `main`.
-
-**Ferdig når:** review-rapporten finnes, minst ett funn er fulgt opp, og minst én subagent kjørte på en billigere modell.
-
-**Recap:**
-
-1. Hva fant reviewen som du ikke så selv?
-2. Hvordan så hand-offen din ut, og hva manglet?
-3. Når ville du delegert hos kunden, og når ikke?
-
 ### `SKILL.md`
 
 **Mål:** du har gjort noe du gjentar til en skill, og agenten finner den selv når du trenger den.
 
 **Start**
 
-Plukk én prompt du har skrevet flere ganger.
+Gjør flyten fra `PLAN.md` til en skill: grilling, plan mode og bevis.
+Eller plukk én prompt du har skrevet flere ganger i dag.
 En skill er egentlig bare en prompt med et navn og en beskrivelse.
 
 **Utforsk**
 
 - Lag skillen i `.claude/skills/<navn>/SKILL.md`, eller personlig i `~/.claude/skills/`.
-- Bruk den på storyen din i en fersk sesjon.
+- Bruk den på neste steg i storyen din, i en fersk sesjon.
 - Test begge veier: med `/navn`, og med naturlig språk uten å nevne skillen. Hentes den ikke, er beskrivelsen feil.
 - Forbedre den etter første kjøring.
 - Skal andre harnesser bruke den: legg den også i `.agents/skills`. Claude Code leser ikke noe under `.agents/`.
@@ -274,6 +205,7 @@ Sjekk lisensen før du kopierer: awesome-claude-code er CC BY-NC-ND, så les den
 
 Verdien bestemmer du selv.
 En skill som bare er morsom, teller også.
+Bruk skillen resten av workshopen, og forbedre den når den bommer.
 
 Ferdig tidlig:
 
@@ -288,31 +220,123 @@ Ferdig tidlig:
 2. Når hentet agenten skillen, og når ikke?
 3. Hvilken skill tar du med til kunden mandag?
 
-### `REVIEW.md`
+### Før du går
 
-**Mål:** du vet hva du kan stole på en agent-review med, og storyen din har en PR.
+Hvor hører en feil agenten gjorde hjemme?
+
+| Agenten gjorde feil | Løs det med |
+|---|---|
+| Den visste det ikke | regel i `AGENTS.md` |
+| Det kan sjekkes | test |
+| Det må aldri skje | hook |
+| Det gjentar seg | skill |
+| Det er mekanisk | script |
+
+Ingen lekser. Hvil hodet.
+I morgen starter vi med å se om `AGENTS.md`-en din holder, og med `/insights` på øktene fra i dag.
+
+## Dag 2
+
+### Holder `AGENTS.md`-en din?
+
+Start `/insights` i en egen terminal først, så går den mens du tester.
+
+Start en fersk sesjon.
+Ta neste steg i storyen din, uten hjelp.
+Klarer agenten seg med det du skrev i går?
+
+### `/insights`
+
+`/insights` leser de siste øktene dine på maskinen og lager en rapport om hvordan du jobber: hva som går galt, hva du kan prøve, og forslag til instruksfila.
+Rapporten ligger i `~/.claude/usage-data/report.html`.
+Den viser navnene på prosjektene dine, så ikke del den på skjerm.
+
+Les rapporten og plukk ett funn.
+Sorter det med «Hvor hører feilen hjemme?» fra i går:
+
+- **Regel:** legg den inn i `AGENTS.md` eller den personlige fila nå. Spør om agenten gjør feil uten den, før du legger den inn.
+- **Skill:** forbedre skillen fra i går, eller lag en ny.
+- **Hook:** noter den. Du lager den i `hooks.json` rett etterpå.
+
+Økter eldre enn 30 dager slettes som standard, så kjør den gjerne hver sprint og gjør ett funn om til en regel, skill eller hook.
+
+**Ferdig når:** regelen er lagt inn, skillen er forbedret, eller hooken er notert.
+
+### `hooks.json`
+
+**Mål:** du har minst én regel agenten ikke kan bryte, og du vet hvem som faktisk sier nei.
 
 **Start**
 
-Du får tre PR-er fra fasilitator.
-Finn det som er galt selv først.
-Så med en agent i fersk kontekst.
-Sammenlign.
+Lag en hook for noe som aldri skal skje.
+Ta gjerne hook-funnet fra `/insights`, eller det AGENTS.md-testen viste.
+En instruks i `AGENTS.md` er noe agenten bør gjøre. En hook er noe den ikke kan la være.
 
 **Utforsk**
 
-- Review lokalt før PR, med en subagent uten forgiftet kontekst og uten forfatterens blikk. Sammenlign med Copilot code review på PR-en i GitHub.
-- Legg inn en deny-regel som nekter agenten å lese secrets. I Leikan ligger de ikke i `.env`, men i `src/TronderLeikan.AppHost/zitadel-bootstrap/` og i user secrets under hjemmemappen (`~/.microsoft/usersecrets/`, på Windows `%APPDATA%\Microsoft\UserSecrets`).
-- Tekst fra web, issues og PR-er kan inneholde instrukser. Prompt injection er ikke løst, så tillatelsene dine er grensen. Hva gjør agenten din med dem?
-- Ferdigstill din egen story-PR.
+- Trigg hooken med vilje. En hook som aldri har fyrt, er bare en hypotese.
+- Klassikere: blokker endringer i testfiler, eller la en Stop-hook kjøre testene før agenten sier at den er ferdig.
+- Legg inn en deny-regel som nekter agenten å lese secrets. I Leikan ligger de ikke i `.env`, men i `src/TronderLeikan.AppHost/zitadel-bootstrap/` og i user secrets under hjemmemappen (`~/.microsoft/usersecrets/`, på Windows `%APPDATA%\Microsoft\UserSecrets`). Be agenten lese `admin.pat` først, legg inn regelen, og prøv igjen.
+- En `Read`-deny stopper ikke `grep -r` i Bash. Det gjør sandkassen. Slå den på med `/sandbox` på macOS, Linux og WSL2. På Windows uten WSL2 finnes den ikke, så se på sammen med en nabo.
+- Tekst fra web, issues og PR-er kan inneholde instrukser. Prompt injection er ikke løst, så tillatelsene dine er grensen.
+- Vi ser på et forslag til felles standard for teamet i plenum. Hva ville du lagt i din egen `~/.claude/settings.json`?
 
-**Ferdig når:** PR-en din er oppe, og du vet hva som mangler.
+Ferdig tidlig:
+
+- Lag en hook til, av en annen type enn den første.
+- Del hooken din med en som jobber annerledes enn deg. Passer den for dem?
+
+**Ferdig når:** hooken og deny-regelen er trigget med vilje.
 
 **Recap:**
 
-1. Hvilken feil fant agenten som du overså, og omvendt?
-2. Hva ville du stolt på en agent-review med hos kunden?
-3. Lot agenten seg lure av teksten den leste?
+1. Når prøvde agenten å komme seg forbi?
+2. Hva i jobben din burde vært en hook og ikke en instruks?
+3. Blir vi enige om den felles standarden?
+
+### `SUBAGENTS.md`
+
+**Mål:** du delegerer til subagenter, og du reviewer endringene dine med en subagent før du lager PR.
+
+**Start**
+
+Be hovedagenten starte en subagent som reviewer endringene dine i fersk kontekst, før du lager PR.
+Skriv hand-offen selv: målet, hvilke filer den skal se på, hva som allerede er bestemt, og nøyaktig hva du vil ha tilbake.
+Subagenten vet ingenting om samtalen din.
+Claude Code kan også velge en fork, som arver hele samtalen og hovedmodellen. Skriv «ikke fork, bruk en fersk subagent» i hand-offen.
+
+**Utforsk**
+
+- La subagenten kjøre på en mindre og raskere modell. Legg regelen i din personlige instruksfil.
+- Kjør `/context` før og etter at du delegerer. Hva ble igjen i hovedsesjonen?
+- Lag en definert subagent i `.claude/agents/`. Start gjerne fra en samling, men les den før du bruker den: [VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents), [hesreallyhim/awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code), [github/awesome-copilot](https://github.com/github/awesome-copilot) eller [VoltAgent/awesome-codex-subagents](https://github.com/VoltAgent/awesome-codex-subagents).
+- Claude Code har også `/code-review` og `/security-review`.
+- Har du Copilot code review i GitHub: se hva den finner på PR-en etter at subagenten har reviewet.
+
+Ferdig tidlig:
+
+- Gjør reviewen til en definert subagent eller en skill, og bruk den før hver PR.
+
+**Ferdig når:** funnene er fulgt opp, PR-en er oppe, og subagenten kjørte på en billigere modell.
+PR-en kan godt være en draft.
+
+**Recap:**
+
+1. Hva fant reviewen som du ikke så selv?
+2. Hvordan så hand-offen din ut, og hva manglet?
+3. Hva ville du stolt på en agent-review med hos kunden?
+
+### `SUMMARY.md`
+
+**Mål:** du bruker alt fra de to dagene på egen hånd.
+
+Velg selv:
+
+- Fullfør storyen, eller ta en ny.
+- Ta det med til ditt eget repo. Kundekode bare der kunden har sagt ja til agenten du bruker.
+- Jobb parallelt i en worktree: følg opp et review-funn i en egen sesjon mens hovedsesjonen jobber videre, og merge tilbake. Bruk `git worktree add ../leikan-fix -b fix/review-funn` fra storybranchen. `claude --worktree` starter fra `main` med mindre du setter `"worktree": { "baseRef": "head" }` i `.claude/settings.local.json`. AppHost kjører bare fra hovedklonen, se [README.md](README.md#feilsøking), så kjør bare tester i worktreen.
+- Finn feilen i tre PR-er fra fasilitator. Finn den selv først, så med en agent i fersk kontekst, og sammenlign. Lot agenten seg lure av teksten den leste?
+- Lag skillen, hooken eller subagenten du mangler.
 
 ### Hva lærte vi?
 

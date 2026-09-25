@@ -60,7 +60,7 @@ else { Warn "GitHub CLI mangler (anbefalt, GitHub MCP eller nettleseren er alter
 
 # Aspire CLI er valgfritt: AppHost bygger med Aspire.AppHost.Sdk fra NuGet, men CLI gir «aspire run» og MCP-server
 if (Has aspire) { Ok "Aspire CLI $((aspire --version 2>$null | Select-Object -First 1) -split '\+' | Select-Object -First 1)" }
-else { Warn "Aspire CLI mangler (valgfritt)" "https://aspire.dev/get-started/install-cli/" }
+else { Warn "Aspire CLI mangler (valgfritt, men trengs for Aspire MCP)" "https://aspire.dev/get-started/install-cli/" }
 
 # Agent-harness. Claude Code er default i workshopen, men andre er lov
 # 2.1.281 er første versjon som leser AGENTS.md i alle sesjoner, også med telemetri av
@@ -70,7 +70,7 @@ if (Has claude) {
     if ($claudeVersion -and $claudeVersion -ge $claudeMin) { Ok "Claude Code $claudeVersion" }
     else { Warn "Claude Code $(if ($claudeVersion) { $claudeVersion } else { 'ukjent versjon' }) er eldre enn $claudeMin og leser kanskje ikke AGENTS.md" "Kjør: claude update" }
 }
-else { Warn "Claude Code mangler. Bruker du en annen harness er det greit" "https://docs.anthropic.com/en/docs/claude-code/quickstart" }
+else { Warn "Claude Code mangler. Bruker du en annen harness er det greit" "https://code.claude.com/docs/en/quickstart" }
 
 # dotnet-verktøy fra .config/dotnet-tools.json (dotnet-ef til migrasjoner)
 if (Has dotnet) {
